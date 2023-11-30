@@ -1,0 +1,24 @@
+robot_name: "2_link"
+dh_params:
+  theta: [0.0,0.0]
+  a: [0.3, 0.25]
+  d: [0.0, 0.0]
+  alpha: [0.0, 0.0]
+joint_limits:
+  j1:
+    position:
+      min: -2.44
+      max: 2.44
+    velocity:
+      min: 1
+      max: 2
+  j2:
+    position:
+      min: -2.5
+      max: 2.5
+    velocity:
+      min: 1
+      max: 3
+
+kinematics_class_plugin: "TwoLinkArmKinematics"
+trajectory_planner_class_plugin: "ConstSpeedLinearTraj"

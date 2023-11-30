@@ -1,0 +1,9 @@
+need to install 
+
+pip install pypubsub
+
+
+# To build 
+
+python setup.py sdist
+pip install -e .
