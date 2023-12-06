@@ -26,3 +26,8 @@ def load_kinematics_class(yml_path):
     with open(yml_path, 'r') as file:
         data = yaml.safe_load(file)
     return data['kinematics_class_plugin']
+
+def load_trjectory_planner_class(yml_path):
+    with open(yml_path, 'r') as file:
+        data = yaml.safe_load(file)
+    return data['trajectory_planner_class_plugin']

@@ -10,6 +10,8 @@ from robotica_core.utils.yml_parser import load_dh_params
 from robotica_core.kinematics.robot_model import DH_parameters
 from robotica_core.trajectory_planning.trajectory import Trajectory
 
+import random
+
 class Visualization():
     def __init__(self, DH_params):
 
@@ -49,8 +51,8 @@ class Visualization():
         self.path.set_data(self.x, self.y)
 
     def _format_path_data(self, cartesian_traj):
-        self.x = [p[0] for p in cartesian_traj]
-        self.y = [p[1] for p in cartesian_traj]
+        self.x = [p.point[0] for p in cartesian_traj]
+        self.y = [p.point[1] for p in cartesian_traj]
 
 
 class ExecutionManager():
@@ -65,14 +67,36 @@ class ExecutionManager():
         self.poller = zmq.Poller()
         self.poller.register(self.data_socket, zmq.POLLIN)
 
+        self.curr_pt = None
+
     def consume_wpt(self):
-        wpt = self.current_trajectory.joint_traj.pop(0)
+        joint_wpt = self.current_trajectory.joint_traj.pop(0)
+        cartesian_wpt = self.current_trajectory.cartesian_traj.pop(0)
 
         if len(self.current_trajectory.joint_traj) == 0:
             self.data_socket.send_string("Move Completed")
+
+        # check for speed
+        if cartesian_wpt.velocity:
+            self.ctl_speed(cartesian_wpt.point, cartesian_wpt.velocity)
+
+        elif len(joint_wpt.velocities) > 0:
+            # Take the largest joint velo
+            pass
+        else:
+            default_velo = 0.5
+            self.ctl_speed(cartesian_wpt.point, default_velo)
             
-        return wpt
+        return joint_wpt.positions
     
+    def ctl_speed(self, next_wpt, speed):
+        if self.curr_pt:
+            dist = ((next_wpt[0] - self.curr_pt[0])**2 + (next_wpt[1] - self.curr_pt[1])**2)**0.5
+            print(dist/speed)
+            time.sleep(dist/speed)
+            
+        self.curr_pt = next_wpt
+
     def is_executing_path(self):
         if len(self.current_trajectory.joint_traj) > 0:
             return True
@@ -84,6 +108,7 @@ class ExecutionManager():
             serialized_data = self.data_socket.recv()
             self.current_trajectory = pickle.loads(serialized_data)
             # self.data_socket.send_string("Data received successfully") 
+
             return self.current_trajectory.cartesian_traj
         else:
             return None
@@ -95,7 +120,7 @@ class SimEnv():
         self.execution_manager = ExecutionManager()
 
     def run(self):
-        self.animation = FuncAnimation(self.vis_scene.figure, self.update, init_func=self.vis_scene.init_space, frames=np.arange(0, 10000, 1), interval=10, blit=False)
+        self.animation = FuncAnimation(self.vis_scene.figure, self.update, init_func=self.vis_scene.init_space, frames=np.arange(0, 10000, 1), interval=0.01, blit=False)
         self.vis_scene.run()
         
     def update(self, frame):
@@ -107,9 +132,10 @@ class SimEnv():
                 else:
                     return
 
+            # Get next wpts to execute 
             theta1, theta2 = self.execution_manager.consume_wpt()
-            print(theta1, theta2)
 
+            # Move Arm
             self.vis_scene.visualize_arm(theta1, theta2)
 
         except (zmq.error.Again, ValueError) as e:

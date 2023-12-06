@@ -1,9 +1,9 @@
 from robotica_core.kinematics.robot_model import RobotModel
-from robotica_core.utils.yml_parser import load_kinematics_class
+from robotica_core.utils.yml_parser import load_kinematics_class, load_trjectory_planner_class
 from robotica_plugins.kinematics.definition import Kinematics_Plugins
+from robotica_plugins.trajectory_planners.definition import Trajectory_Planers_Plugins
 from robotica_core.simulation.joint_publisher import publish_joint_data
-from robotica_core.trajectory_planning.trajectory import Trajectory
-
+from robotica_core.trajectory_planning.trajectory import Trajectory, CartesianTrajectoryPoint, JointTrajectoryPoint
 
 class Robot:
     def __init__(self, robot_yml_file):
@@ -13,26 +13,24 @@ class Robot:
         kinematics_cls = Kinematics_Plugins[kinematics_cls_name]
         self.kinematics = kinematics_cls(self.robot_model)
 
-    def joint_move(self, joint_trajectory):
+        traj_planner_cls_name = load_trjectory_planner_class(robot_yml_file)
+        traj_planner_cls = Trajectory_Planers_Plugins[traj_planner_cls_name]
+        self.cartesian_trajectory_planner = traj_planner_cls(self.kinematics)
 
+    def joint_move(self, joint_trajectory):
         cartesian_traj = []
+        joint_traj = []
         for joint in joint_trajectory:
             ee_point = self.kinematics.forward_kinematics(joint)
-            cartesian_traj.append(ee_point)
+            cartesian_traj_point = CartesianTrajectoryPoint(ee_point)
+            cartesian_traj.append(cartesian_traj_point)
 
-        print(cartesian_traj)
+            joint_traj_point = JointTrajectoryPoint(joint)
+            joint_traj.append(joint_traj_point)
 
-        trajectory = Trajectory(joint_trajectory, cartesian_traj)
+        trajectory = Trajectory(joint_traj, cartesian_traj)
         publish_joint_data(trajectory)
 
-    def cartesian_move(self, cartesian_trajectory):
-
-        joint_traj = []
-        for point in cartesian_trajectory:
-            joint_pos = self.kinematics.inverse_kinematics(point, 0)
-            joint_traj.append(joint_pos)
-
-        print(joint_traj)
-
-        
-        #publish_joint_data(trajectory)
+    def cartesian_move(self, start_point, target_point, speed):
+        trajectory = self.cartesian_trajectory_planner.cartesian_trajectory(start_point, target_point, speed, num_steps=30)
+        publish_joint_data(trajectory)
