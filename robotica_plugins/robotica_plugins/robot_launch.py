@@ -34,3 +34,18 @@ class Robot:
     def cartesian_move(self, start_point, target_point, speed):
         trajectory = self.cartesian_trajectory_planner.cartesian_trajectory(start_point, target_point, speed, num_steps=30)
         publish_joint_data(trajectory)
+
+    def get_current_joint_positions(self):
+        return self.robot_model.get_current_pos()
+    
+    def execute_path(self, path, speed):
+        """ Move arm along a path 
+
+        Args: 
+            path[List]: A list of wpts
+        """
+
+        for wpt in path:
+            curr_joints = self.get_current_joint_positions()
+            curr_pos = self.kinematics.forward_kinematics(curr_joints)
+            self.cartesian_move(curr_pos, wpt, speed)

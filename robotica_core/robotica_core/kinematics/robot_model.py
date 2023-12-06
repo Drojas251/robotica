@@ -1,4 +1,5 @@
 from robotica_core.utils.yml_parser import load_dh_params, load_robot_name, load_joint_limits
+from robotica_core.utils.robotica_networking import RoboticaSubscriber
 
 class DH_parameters(object):
     # << DH (Denavit-Hartenberg) parameters structure >> #
@@ -48,4 +49,15 @@ class RobotModel():
 
         theta, a, d, alpha = load_dh_params(yml_path)
         self.DH_params = DH_parameters(theta, a, d, alpha)
+
+        self.thetas = self.DH_params.theta
+
+        self.joint_listener = RoboticaSubscriber(port="5153", topic="joint_publisher")
+        self.joint_listener.subscribe(callback=self.joint_listener_callback)
+
+    def joint_listener_callback(self, data):
+        self.thetas = data
+    
+    def get_current_pos(self):
+        return self.thetas
 

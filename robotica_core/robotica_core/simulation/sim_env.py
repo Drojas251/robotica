@@ -7,6 +7,7 @@ import time
 import sys
 
 from robotica_core.utils.yml_parser import load_dh_params
+from robotica_core.utils.robotica_networking import RoboticaPublisher
 from robotica_core.kinematics.robot_model import DH_parameters
 from robotica_core.trajectory_planning.trajectory import Trajectory
 
@@ -118,6 +119,8 @@ class SimEnv():
 
         self.vis_scene = Visualization(DH_params)
         self.execution_manager = ExecutionManager()
+        self.joint_publisher = RoboticaPublisher(port="5153", topic="joint_publisher")
+        self.curr_joints = None
 
     def run(self):
         self.animation = FuncAnimation(self.vis_scene.figure, self.update, init_func=self.vis_scene.init_space, frames=np.arange(0, 10000, 1), interval=0.01, blit=False)
@@ -137,6 +140,8 @@ class SimEnv():
 
             # Move Arm
             self.vis_scene.visualize_arm(theta1, theta2)
+
+            self.joint_publisher.publish([theta1, theta2])
 
         except (zmq.error.Again, ValueError) as e:
             print(f"{e}")
