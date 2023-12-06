@@ -12,10 +12,11 @@ robot.cartesian_move((0.49, 0.24), (0.35, 0.0), 0.1)
 robot.cartesian_move((0.35, 0.0), (0.24, 0.24), 0.3)
 robot.cartesian_move( (0.24, 0.24), (0.49, 0.24), 0.9)
 
-
-robot.cartesian_move((0.49, 0.24), (0.24, 0.24), 0.1)
-robot.cartesian_move((0.24, 0.24), (0.35, 0.0), 0.5)
-robot.cartesian_move((0.35, 0.0), (0.49, 0.24), 0.9)
+path = [(0.35, 0.0), (0.24, 0.24), (0.49, 0.24)]
+robot.execute_path(path, 0.4)
+# robot.cartesian_move((0.49, 0.24), (0.24, 0.24), 0.1)
+# robot.cartesian_move((0.24, 0.24), (0.35, 0.0), 0.5)
+# robot.cartesian_move((0.35, 0.0), (0.49, 0.24), 0.9)
 
 
 
