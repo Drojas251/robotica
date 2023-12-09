@@ -5,6 +5,8 @@ from robotica_plugins.trajectory_planners.definition import Trajectory_Planers_P
 from robotica_core.simulation.joint_publisher import publish_joint_data
 from robotica_core.trajectory_planning.trajectory import Trajectory, CartesianTrajectoryPoint, JointTrajectoryPoint
 
+from robotica_core.trajectory_planning.cartesian_trajectory_base import WayPoint
+
 class Robot:
     def __init__(self, robot_yml_file):
         self.robot_model = RobotModel(robot_yml_file)
@@ -22,7 +24,7 @@ class Robot:
         joint_traj = []
         for joint in joint_trajectory:
             ee_point = self.kinematics.forward_kinematics(joint)
-            cartesian_traj_point = CartesianTrajectoryPoint(ee_point)
+            cartesian_traj_point = CartesianTrajectoryPoint((ee_point[0], ee_point[1]), 0.2)
             cartesian_traj.append(cartesian_traj_point)
 
             joint_traj_point = JointTrajectoryPoint(joint)
@@ -31,21 +33,22 @@ class Robot:
         trajectory = Trajectory(joint_traj, cartesian_traj)
         publish_joint_data(trajectory)
 
-    def cartesian_move(self, start_point, target_point, speed):
-        trajectory = self.cartesian_trajectory_planner.cartesian_trajectory(start_point, target_point, speed, num_steps=30)
-        publish_joint_data(trajectory)
-
     def get_current_joint_positions(self):
         return self.robot_model.get_current_pos()
     
-    def execute_path(self, path, speed):
+    def execute_path(self, path):
         """ Move arm along a path 
 
         Args: 
             path[List]: A list of wpts
         """
 
-        for wpt in path:
-            curr_joints = self.get_current_joint_positions()
-            curr_pos = self.kinematics.forward_kinematics(curr_joints)
-            self.cartesian_move(curr_pos, wpt, speed)
+        curr_joints = self.get_current_joint_positions()
+        curr_pos = self.kinematics.forward_kinematics(curr_joints)
+        cur_wpt = WayPoint(curr_pos, 0)
+        path.insert(0, cur_wpt)
+
+        trajectory = self.cartesian_trajectory_planner.cartesian_trajectory(path)
+        publish_joint_data(trajectory)
+
+

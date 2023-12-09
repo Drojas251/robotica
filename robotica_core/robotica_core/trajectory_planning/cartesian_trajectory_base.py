@@ -3,23 +3,20 @@ import numpy as np
 from abc import abstractmethod
 from robotica_core.trajectory_planning.trajectory import Trajectory, JointTrajectoryPoint, CartesianTrajectoryPoint
 
-class PathPoint():
-    def __init__(self, point):
+class WayPoint():
+    def __init__(self, point, speed):
         self.point = point
-
+        self.speed  = speed
 
 class CartesianTrajectoryBase():
     def __init__(self, kinematics):
         self.kinematics = kinematics
 
-    def cartesian_trajectory_generator(self, start_pt, target_pt, max_speed, num_steps=10):
+    def cartesian_trajectory_generator(self, wpts):
         """ Cartesian Trajectory Generator
         
         Args:
-            start_pt ([List]): Initial start position 
-            target_pt([List]): Initial goal position 
-            max_speed(Float): Max end effector speed 
-            num_steps(Int): Number of interpolated points between start-goal points
+            wpts ([WayPoint]): List of WayPoint objects
 
         Returns:
             x[List]: ee x points 
@@ -29,14 +26,14 @@ class CartesianTrajectoryBase():
 
         pass
     
-    def cartesian_trajectory(self, start_pt, target_pt, max_speed, num_steps=10):
+    def cartesian_trajectory(self, wpts):
 
-        x, y, speeds = self.cartesian_trajectory_generator(start_pt, target_pt, max_speed, num_steps=num_steps)
+        x, y, speeds = self.cartesian_trajectory_generator(wpts)
 
         joint_trajectory = []
         cartesian_trajectory = []
 
-        for i in range(num_steps):
+        for i in range(len(x)):
             joint_value = self.kinematics.inverse_kinematics((x[i], y[i]), 1)
 
             # Define joint trajectory

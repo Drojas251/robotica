@@ -82,8 +82,7 @@ class ExecutionManager():
             self.ctl_speed(cartesian_wpt.point, cartesian_wpt.velocity)
 
         elif len(joint_wpt.velocities) > 0:
-            # Take the largest joint velo
-            pass
+            time.sleep(0.02)
         else:
             default_velo = 0.5
             self.ctl_speed(cartesian_wpt.point, default_velo)
@@ -104,8 +103,8 @@ class ExecutionManager():
         else:
             return False
         
-    def wait_for_joint_trajectory(self):
-        if self.poller.poll(1000):
+    def wait_for_joint_trajectory(self, delay):
+        if self.poller.poll(delay):
             serialized_data = self.data_socket.recv()
             self.current_trajectory = pickle.loads(serialized_data)
             # self.data_socket.send_string("Data received successfully") 
@@ -120,32 +119,35 @@ class SimEnv():
         self.vis_scene = Visualization(DH_params)
         self.execution_manager = ExecutionManager()
         self.joint_publisher = RoboticaPublisher(port="5153", topic="joint_publisher")
-        self.curr_joints = None
+        self.curr_joints = DH_params.theta
+        self.sim_interval = 0.01
 
     def run(self):
-        self.animation = FuncAnimation(self.vis_scene.figure, self.update, init_func=self.vis_scene.init_space, frames=np.arange(0, 10000, 1), interval=0.01, blit=False)
+        self.animation = FuncAnimation(self.vis_scene.figure, self.update, init_func=self.vis_scene.init_space, frames=np.arange(0, 10000, 1), interval=self.sim_interval, blit=False)
         self.vis_scene.run()
         
     def update(self, frame):
-        try:
-            if not self.execution_manager.is_executing_path():
-                traj = self.execution_manager.wait_for_joint_trajectory()
-                if traj:
-                    self.vis_scene.visualize_cartesian_path(traj)
-                else:
-                    return
+        if not self.execution_manager.is_executing_path():
+            traj = self.execution_manager.wait_for_joint_trajectory(1000)
+            if traj:
+                self.vis_scene.visualize_cartesian_path(traj)
+            else:
+                # Publish joint position
+                self._publish_joints()
+                return
 
-            # Get next wpts to execute 
-            theta1, theta2 = self.execution_manager.consume_wpt()
+        # Get next wpts to execute 
+        theta1, theta2 = self.execution_manager.consume_wpt()
 
-            # Move Arm
-            self.vis_scene.visualize_arm(theta1, theta2)
+        # Move Arm
+        self.vis_scene.visualize_arm(theta1, theta2)
 
-            self.joint_publisher.publish([theta1, theta2])
+        self.curr_joints = (theta1, theta2)
+        self._publish_joints()
 
-        except (zmq.error.Again, ValueError) as e:
-            print(f"{e}")
-            pass
+    def _publish_joints(self):
+        self.joint_publisher.publish([self.curr_joints[0], self.curr_joints[1]])
+        print(f"Curr Joint Position: {self.curr_joints}")
 
 
 if __name__ == "__main__":
