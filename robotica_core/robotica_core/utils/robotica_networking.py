@@ -26,7 +26,9 @@ class RoboticaSubscriber:
         self.topic = topic
 
     def subscribe(self, callback):
-        threading.Thread(target=self._subscribe, args=(self.topic, callback)).start()
+        thread = threading.Thread(target=self._subscribe, args=(self.topic, callback))
+        thread.daemon = True  # Set the thread as a daemon
+        thread.start()
 
     def _subscribe(self, topic, callback):
         while True:
