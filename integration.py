@@ -1,4 +1,4 @@
-from robot_launch import Robot
+from robotica_plugins.robot_launch import Robot
 import time
 
 yml_path = "/home/drojas/robot_arm/robotica/2_link_robot.yml"
