@@ -1,4 +1,5 @@
 import yaml
+import os
 
 def load_dh_params(yml_path):
     with open(yml_path, 'r') as file:
@@ -31,3 +32,19 @@ def load_trjectory_planner_class(yml_path):
     with open(yml_path, 'r') as file:
         data = yaml.safe_load(file)
     return data['trajectory_planner_class_plugin']
+
+def get_pub_sub_info(topic_name):
+    yml_path = "/home/drojas/robot_arm/robotica/robotica_core/robotica_core/endpoints.yml"
+    with open(yml_path, 'r') as file:
+        data = yaml.safe_load(file)
+    pub_sub = data["pub_sub"]
+    channel = pub_sub[topic_name]
+    return channel["topic"], channel["port"]
+
+def get_serv_req_info(serv_name):
+    yml_path = "/home/drojas/robot_arm/robotica/robotica_core/robotica_core/endpoints.yml"
+    with open(yml_path, 'r') as file:
+        data = yaml.safe_load(file)
+    serv_req = data["serv_req"]
+    channel = serv_req[serv_name]
+    return channel["port"]

@@ -3,6 +3,7 @@ import pickle
 import time
 
 from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory
+from robotica_core.utils.yml_parser import get_serv_req_info
 
 
 class ControllerManager():
@@ -12,7 +13,8 @@ class ControllerManager():
         # Joint Service 
         context = zmq.Context()
         self.data_socket = context.socket(zmq.REP)
-        self.data_socket.bind("tcp://127.0.0.1:5555")
+        move_req_port = get_serv_req_info("move_request")
+        self.data_socket.bind(f"tcp://127.0.0.1:{move_req_port}")
 
         self.poller = zmq.Poller()
         self.poller.register(self.data_socket, zmq.POLLIN)

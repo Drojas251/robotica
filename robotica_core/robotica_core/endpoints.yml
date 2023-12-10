@@ -1,0 +1,8 @@
+pub_sub:
+  joint_publisher:
+    topic: "joint_publisher"
+    port: "5153"
+
+serv_req:
+  move_request:
+    port: "5555"

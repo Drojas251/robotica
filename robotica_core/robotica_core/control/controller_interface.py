@@ -1,16 +1,18 @@
 import zmq
 import pickle
+from robotica_core.utils.yml_parser import get_serv_req_info
+
 
 class ControllerInterface:
     def __init__(self):
-        self.joint_traj_req_port = "5555"
+        self.move_req_port = get_serv_req_info("move_request")
 
     def execute_move(self, trajectory):
         # This is a blocking function 
 
         context = zmq.Context()
         socket = context.socket(zmq.REQ)
-        socket.connect(f"tcp://127.0.0.1:{self.joint_traj_req_port}")
+        socket.connect(f"tcp://127.0.0.1:{self.move_req_port}")
 
         message = pickle.dumps(trajectory)
 
