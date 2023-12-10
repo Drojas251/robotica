@@ -3,6 +3,7 @@ from robotica_core.utils.yml_parser import load_kinematics_class, load_trjectory
 from robotica_plugins.kinematics.definition import Kinematics_Plugins
 from robotica_plugins.trajectory_planners.definition import Trajectory_Planners_Plugins
 from robotica_core.simulation.joint_publisher import publish_joint_data
+from robotica_core.control.controller_interface import ControllerInterface
 from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory, JointTrajectoryPoint, CartesianTrajectoryPoint
 from robotica_datatypes.path_datatypes.waypoint import WayPoint
 
@@ -18,6 +19,8 @@ class Robot:
         traj_planner_cls = Trajectory_Planners_Plugins[traj_planner_cls_name]
         self.cartesian_trajectory_planner = traj_planner_cls(self.kinematics)
 
+        self.controller = ControllerInterface()
+
     def joint_move(self, joint_trajectory):
         cartesian_traj = []
         joint_traj = []
@@ -30,7 +33,7 @@ class Robot:
             joint_traj.append(joint_traj_point)
 
         trajectory = Trajectory(joint_traj, cartesian_traj)
-        publish_joint_data(trajectory)
+        self.controller.execute_move(trajectory)
 
     def get_current_joint_positions(self):
         return self.robot_model.get_current_pos()
@@ -48,6 +51,6 @@ class Robot:
         path.insert(0, cur_wpt)
 
         trajectory = self.cartesian_trajectory_planner.cartesian_trajectory(path)
-        publish_joint_data(trajectory)
+        self.controller.execute_move(trajectory)
 
 
