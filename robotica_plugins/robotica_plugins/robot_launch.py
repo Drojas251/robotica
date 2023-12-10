@@ -1,7 +1,7 @@
 from robotica_core.kinematics.robot_model import RobotModel
 from robotica_core.utils.yml_parser import load_kinematics_class, load_trjectory_planner_class
 from robotica_plugins.kinematics.definition import Kinematics_Plugins
-from robotica_plugins.trajectory_planners.definition import Trajectory_Planers_Plugins
+from robotica_plugins.trajectory_planners.definition import Trajectory_Planners_Plugins
 from robotica_core.simulation.joint_publisher import publish_joint_data
 from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory, JointTrajectoryPoint, CartesianTrajectoryPoint
 from robotica_datatypes.path_datatypes.waypoint import WayPoint
@@ -15,7 +15,7 @@ class Robot:
         self.kinematics = kinematics_cls(self.robot_model)
 
         traj_planner_cls_name = load_trjectory_planner_class(robot_yml_file)
-        traj_planner_cls = Trajectory_Planers_Plugins[traj_planner_cls_name]
+        traj_planner_cls = Trajectory_Planners_Plugins[traj_planner_cls_name]
         self.cartesian_trajectory_planner = traj_planner_cls(self.kinematics)
 
     def joint_move(self, joint_trajectory):
