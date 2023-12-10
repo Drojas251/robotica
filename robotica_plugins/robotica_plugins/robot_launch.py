@@ -2,7 +2,6 @@ from robotica_core.kinematics.robot_model import RobotModel
 from robotica_core.utils.yml_parser import load_kinematics_class, load_trjectory_planner_class
 from robotica_plugins.kinematics.definition import Kinematics_Plugins
 from robotica_plugins.trajectory_planners.definition import Trajectory_Planners_Plugins
-from robotica_core.simulation.joint_publisher import publish_joint_data
 from robotica_core.control.controller_interface import ControllerInterface
 from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory, JointTrajectoryPoint, CartesianTrajectoryPoint
 from robotica_datatypes.path_datatypes.waypoint import WayPoint
