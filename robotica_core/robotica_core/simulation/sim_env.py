@@ -8,8 +8,8 @@ import sys
 
 from robotica_core.utils.yml_parser import load_dh_params
 from robotica_core.utils.robotica_networking import RoboticaPublisher
-from robotica_core.kinematics.robot_model import DH_parameters
-from robotica_core.trajectory_planning.trajectory import Trajectory
+from robotica_datatypes.kinematic_datatypes.DH_params import DH_parameters
+from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory
 
 import random
 

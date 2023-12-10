@@ -1,18 +1,12 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='robotica_plugins',
+    name='robotica_datatypes',
     version='0.1.0',
     packages=find_packages(),
     install_requires=[
-        "robotica_core",
-        "robotica_datatypes",
+        # List your dependencies here
     ],
-    entry_points={
-        'console_scripts': [
-            # Define any console scripts here
-        ],
-    },
     author='Your Name',
     author_email='your.email@example.com',
     description='Description of your package',

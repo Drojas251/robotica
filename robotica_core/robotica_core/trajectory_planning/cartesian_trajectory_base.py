@@ -1,12 +1,7 @@
 # Numpy (Array computing Lib.) [pip3 install numpy]
 import numpy as np
 from abc import abstractmethod
-from robotica_core.trajectory_planning.trajectory import Trajectory, JointTrajectoryPoint, CartesianTrajectoryPoint
-
-class WayPoint():
-    def __init__(self, point, speed):
-        self.point = point
-        self.speed  = speed
+from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory, JointTrajectoryPoint, CartesianTrajectoryPoint
 
 class CartesianTrajectoryBase():
     def __init__(self, kinematics):

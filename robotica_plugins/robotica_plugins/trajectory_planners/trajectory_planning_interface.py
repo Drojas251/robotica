@@ -2,7 +2,6 @@ from robotica_core.trajectory_planning.cartesian_trajectory_base import Cartesia
 from abc import abstractmethod
 
 
-
 class CartesianTrajectoryPluginInterface(CartesianTrajectoryBase):
     def __init__(self, kinematics):
         CartesianTrajectoryBase.__init__(self, kinematics)

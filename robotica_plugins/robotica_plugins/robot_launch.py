@@ -3,9 +3,8 @@ from robotica_core.utils.yml_parser import load_kinematics_class, load_trjectory
 from robotica_plugins.kinematics.definition import Kinematics_Plugins
 from robotica_plugins.trajectory_planners.definition import Trajectory_Planers_Plugins
 from robotica_core.simulation.joint_publisher import publish_joint_data
-from robotica_core.trajectory_planning.trajectory import Trajectory, CartesianTrajectoryPoint, JointTrajectoryPoint
-
-from robotica_core.trajectory_planning.cartesian_trajectory_base import WayPoint
+from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory, JointTrajectoryPoint, CartesianTrajectoryPoint
+from robotica_datatypes.path_datatypes.waypoint import WayPoint
 
 class Robot:
     def __init__(self, robot_yml_file):
