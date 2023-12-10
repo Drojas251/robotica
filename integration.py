@@ -1,6 +1,5 @@
 from robotica_plugins.robot_launch import Robot
-import time
-from robotica_core.trajectory_planning.cartesian_trajectory_base import WayPoint
+from robotica_datatypes.path_datatypes.waypoint import WayPoint
 
 
 yml_path = "/home/drojas/robot_arm/robotica/2_link_robot.yml"
