@@ -1,23 +1,17 @@
-import zmq
-import pickle
 import time
 
 from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory
 from robotica_core.utils.yml_parser import get_serv_req_info
+from robotica_core.utils.robotica_networking import RoboticaService
 
 
 class ControllerManager():
     def __init__(self):
         self.current_trajectory = Trajectory()
 
-        # Joint Service 
-        context = zmq.Context()
-        self.data_socket = context.socket(zmq.REP)
-        move_req_port = get_serv_req_info("move_request")
-        self.data_socket.bind(f"tcp://127.0.0.1:{move_req_port}")
-
-        self.poller = zmq.Poller()
-        self.poller.register(self.data_socket, zmq.POLLIN)
+        # Move Service 
+        move_serv_port = get_serv_req_info("move_service")
+        self.move_service = RoboticaService(port=move_serv_port)
 
         self.curr_pt = None
 
@@ -26,7 +20,7 @@ class ControllerManager():
         cartesian_wpt = self.current_trajectory.cartesian_traj.pop(0)
 
         if len(self.current_trajectory.joint_traj) == 0:
-            self.data_socket.send_string("Move Completed")
+            self.move_service.send_response("Move Completed")
 
         # check for speed
         if cartesian_wpt.velocity:
@@ -55,9 +49,8 @@ class ControllerManager():
             return False
         
     def wait_for_joint_trajectory(self, delay):
-        if self.poller.poll(delay):
-            serialized_data = self.data_socket.recv()
-            self.current_trajectory = pickle.loads(serialized_data)
+        if self.move_service.received_request(delay):
+            self.current_trajectory = self.move_service.unpack_request()
             return self.current_trajectory.cartesian_traj
         else:
             return None

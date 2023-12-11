@@ -38,3 +38,42 @@ class RoboticaSubscriber:
                 data = msg[self.topic]
                 callback(data)
 
+class RoboticaService:
+    def __init__(self, port):
+        context = zmq.Context()
+        self.data_socket = context.socket(zmq.REP)
+        self.data_socket.bind(f"tcp://127.0.0.1:{port}")
+
+        self.poller = zmq.Poller()
+        self.poller.register(self.data_socket, zmq.POLLIN)
+
+    def received_request(self, block_timeout):
+        """
+        Args:
+            block_timeout (int): Time in ms to check for request
+        """
+        return self.poller.poll(block_timeout)
+    
+    def unpack_request(self):
+        serialized_data = self.data_socket.recv()
+        return pickle.loads(serialized_data)
+    
+    def send_response(self, msg):
+        self.data_socket.send_string(msg)
+
+
+class RoboticaClient:
+    def __init__(self, port):
+        context = zmq.Context()
+        self.socket = context.socket(zmq.REQ)
+        self.socket.connect(f"tcp://127.0.0.1:{port}")
+
+    def send_req(self, data):
+        message = pickle.dumps(data)
+        self.socket.send(message)
+
+        # Blocks until reply msg is received 
+        reply_message = self.socket.recv_string()
+        return reply_message
+
+

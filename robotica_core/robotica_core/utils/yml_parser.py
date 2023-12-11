@@ -45,6 +45,6 @@ def get_serv_req_info(serv_name):
     yml_path = "/home/drojas/robot_arm/robotica/robotica_core/robotica_core/endpoints.yml"
     with open(yml_path, 'r') as file:
         data = yaml.safe_load(file)
-    serv_req = data["serv_req"]
+    serv_req = data["service"]
     channel = serv_req[serv_name]
     return channel["port"]

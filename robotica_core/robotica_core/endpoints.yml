@@ -3,6 +3,6 @@ pub_sub:
     topic: "joint_publisher"
     port: "5153"
 
-serv_req:
-  move_request:
+service:
+  move_service:
     port: "5555"
