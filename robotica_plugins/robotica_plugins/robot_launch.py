@@ -1,5 +1,5 @@
 from robotica_core.kinematics.robot_model import RobotModel
-from robotica_core.utils.yml_parser import load_kinematics_class, load_trjectory_planner_class
+from robotica_core.utils.yml_parser import RobotParamsLoader
 from robotica_plugins.kinematics.definition import Kinematics_Plugins
 from robotica_plugins.trajectory_planners.definition import Trajectory_Planners_Plugins
 from robotica_core.control.controller_interface import ControllerInterface
@@ -10,11 +10,13 @@ class Robot:
     def __init__(self, robot_yml_file):
         self.robot_model = RobotModel(robot_yml_file)
 
-        kinematics_cls_name = load_kinematics_class(robot_yml_file)
+        param_loader = RobotParamsLoader(robot_yml_file)
+
+        kinematics_cls_name = param_loader.load_kinematics_class()
         kinematics_cls = Kinematics_Plugins[kinematics_cls_name]
         self.kinematics = kinematics_cls(self.robot_model)
 
-        traj_planner_cls_name = load_trjectory_planner_class(robot_yml_file)
+        traj_planner_cls_name = param_loader.load_trjectory_planner_class()
         traj_planner_cls = Trajectory_Planners_Plugins[traj_planner_cls_name]
         self.cartesian_trajectory_planner = traj_planner_cls(self.kinematics)
 

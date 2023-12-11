@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import sys
 
-from robotica_core.utils.yml_parser import load_dh_params
+from robotica_core.utils.yml_parser import RobotParamsLoader
 from robotica_core.utils.robotica_networking import RoboticaPublisher
 from robotica_core.control.controller_manager import ControllerManager
 from robotica_datatypes.kinematic_datatypes.DH_params import DH_parameters
@@ -98,7 +98,8 @@ if __name__ == "__main__":
 
     # Get the yml_path from the command-line argument
     yml_path = sys.argv[1]
-    theta, a, d, alpha = load_dh_params(yml_path)
+    param_loader = RobotParamsLoader(yml_path)
+    theta, a, d, alpha = param_loader.load_dh_params()
     DH_params = DH_parameters(theta, a, d, alpha)
     
     sim = SimEnv(DH_params)

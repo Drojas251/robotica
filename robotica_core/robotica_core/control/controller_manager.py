@@ -1,16 +1,18 @@
 import time
 
 from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory
-from robotica_core.utils.yml_parser import get_serv_req_info
+from robotica_core.utils.yml_parser import NetworkingParams
+
 from robotica_core.utils.robotica_networking import RoboticaService
 
 
 class ControllerManager():
     def __init__(self):
         self.current_trajectory = Trajectory()
-
+        
+        networking_params = NetworkingParams() 
         # Move Service 
-        move_serv_port = get_serv_req_info("move_service")
+        move_serv_port = networking_params.get_serv_req_info("move_service")
         self.move_service = RoboticaService(port=move_serv_port)
 
         self.curr_pt = None
