@@ -1,0 +1,6 @@
+robotica_plugins/__pycache__/
+robotica_plugins/kinematics/__pycache__/
+robotica_plugins/kinematics/plugins/__pycache__/
+robotica_plugins/trajectory_planners/__pycache__/
+robotica_plugins/trajectory_planners/plugins/__pycache__/
+

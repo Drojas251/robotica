@@ -1,0 +1,8 @@
+dist/
+robotica_core.egg-info/
+robotica_core/__pycache__/
+robotica_core/control/__pycache__/
+robotica_core/kinematics/__pycache__/
+robotica_core/trajectory_planning/__pycache__/
+robotica_core/utils/__pycache__/
+

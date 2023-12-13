@@ -1,0 +1,6 @@
+robotica_datatypes.egg-info/
+robotica_datatypes/__pycache__/
+robotica_datatypes/kinematic_datatypes/__pycache__/
+robotica_datatypes/path_datatypes/__pycache__/
+robotica_datatypes/trajectory_datatypes/__pycache__/
+
