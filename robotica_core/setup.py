@@ -6,6 +6,11 @@ setup(
     packages=find_packages(),
     install_requires=[
         "robotica_datatypes",
+        "numpy>=1.20",
+        "matplotlib>=3.3.4",
+        "pyyaml",
+        "pyzmq==19.0.2",
+
     ],
     author='Your Name',
     author_email='your.email@example.com',
