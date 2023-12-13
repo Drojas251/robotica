@@ -10,6 +10,9 @@ setup(
         "matplotlib>=3.3.4",
         "pyyaml",
         "pyzmq==19.0.2",
+        "notebook",
+        "ipykernel",
+        "ipython==8.12.0",
 
     ],
     author='Your Name',
