@@ -12,6 +12,8 @@ else
     source start_venv.sh
 fi
 
+pip install pip==20.3.4
+
 # Build core package
 cd ./robotica_datatypes
 source ./build.sh

@@ -8,6 +8,9 @@ from robotica_core.utils.robotica_networking import RoboticaPublisher
 from robotica_core.control.controller_manager import ControllerManager
 from robotica_datatypes.kinematic_datatypes.DH_params import DH_parameters
 
+import matplotlib
+matplotlib.use('Qt5Agg')
+
 import random
 
 class Visualization():
