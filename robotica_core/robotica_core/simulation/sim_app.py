@@ -9,6 +9,7 @@ from robotica_core.utils.yml_parser import RobotParamsLoader
 from robotica_core.utils.robotica_networking import RoboticaPublisher
 from robotica_core.control.controller_manager import ControllerManager
 from robotica_datatypes.kinematic_datatypes.DH_params import DH_parameters    
+from robotica_core.kinematics.tftree import TFTree
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
@@ -34,6 +35,7 @@ class Visualization():
         self.DH_params = DH_params
         self.link_length_1 = self.DH_params.a[0]
         self.link_length_2 = self.DH_params.a[1]
+        self.tftree = TFTree(DH_params)
 
     def run(self):
         self.plt.show()
@@ -44,11 +46,15 @@ class Visualization():
         self.visualize_arm(theta1, theta2)
 
     def visualize_arm(self, theta1, theta2):
-        y_end = self.link_length_1 * np.sin(theta1) + self.link_length_2 * np.sin(theta1 + theta2)
-        x_end = self.link_length_1 * np.cos(theta1) + self.link_length_2 * np.cos(theta1 + theta2)
+        self.tftree.set_joints([theta1, theta2])
+        tree = self.tftree.get_tree()
+        x_values = []
+        y_values = []
+        for pt in tree:
+            x_values.append(pt[0])
+            y_values.append(pt[1])
 
-        # [origin_x, x_pos_first_joint, x_pos_ee], [origin.y, y_pos_first_joint, y_pos_ee]
-        self.arm_line.set_data([0, self.link_length_1 * np.cos(theta1), x_end], [0, self.link_length_1 * np.sin(theta1), y_end])
+        self.arm_line.set_data(x_values, y_values)
 
     def visualize_cartesian_path(self, cartesian_traj):
         self._format_path_data(cartesian_traj)
