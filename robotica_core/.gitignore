@@ -5,4 +5,4 @@ robotica_core/control/__pycache__/
 robotica_core/kinematics/__pycache__/
 robotica_core/trajectory_planning/__pycache__/
 robotica_core/utils/__pycache__/
-
+robotica_core/api/__pycache__/
