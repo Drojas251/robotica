@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 class TFTree:
     def __init__(self, DH_params):
@@ -18,6 +19,31 @@ class TFTree:
             tree.append(self._get_translation(A_i))
 
         return tree
+
+    def get_link_tfs(self):
+        # HACK: Getting the tf of the center of each link
+        link_tf_list = []
+
+        for j in range(self.num_joints):
+            transforms = []
+            for i in range(j + 1):
+                theta = self.DH_params.theta[i]
+                a = self.DH_params.a[i]
+                d = self.DH_params.d[i]
+                alpha = self.DH_params.alpha[i]
+
+                if i == j:
+                    a = a/2
+                A_i = self._transform(theta, a, d, alpha)
+                transforms.append(A_i)
+
+            A = [[1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,1]]
+            for Aj in transforms:
+                A = np.matmul(A,Aj)
+
+            link_tf_list.append(A)
+
+        return link_tf_list        
 
     def _get_translation(self, A):
         return (A[0][3], A[1][3])
@@ -52,5 +78,3 @@ class TFTree:
         ]
 
         return A
-
-

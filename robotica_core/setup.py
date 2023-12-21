@@ -14,6 +14,7 @@ setup(
         "notebook",
         "ipykernel",
         "ipython==8.12.0",
+        "python-fcl",
 
     ],
     author='Your Name',

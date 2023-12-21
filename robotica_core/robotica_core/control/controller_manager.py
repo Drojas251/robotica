@@ -2,12 +2,12 @@ import time
 
 from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory
 from robotica_core.utils.yml_parser import NetworkingParams
-
+from robotica_core.utils.robotica_networking import RoboticaPublisher
 from robotica_core.utils.robotica_networking import RoboticaService
 
 
 class ControllerManager():
-    def __init__(self):
+    def __init__(self, init_joints):
         self.current_trajectory = Trajectory()
         
         networking_params = NetworkingParams() 
@@ -15,7 +15,12 @@ class ControllerManager():
         move_serv_port = networking_params.get_serv_req_info("move_service")
         self.move_service = RoboticaService(port=move_serv_port)
 
+        # Joint Publisher
+        topic, port = networking_params.get_pub_sub_info("joint_publisher")
+        self.joint_publisher = RoboticaPublisher(port=port, topic=topic)
+
         self.curr_pt = None
+        self.curr_joints = init_joints
 
     def consume_wpt(self):
         joint_wpt = self.current_trajectory.joint_traj.pop(0)
@@ -34,12 +39,15 @@ class ControllerManager():
             default_velo = 0.5
             self.ctl_speed(cartesian_wpt.point, default_velo)
             
+        # Publish Joint Positions
+        self.curr_joints = joint_wpt.positions
+        self.publish_joints()
+
         return joint_wpt.positions
     
     def ctl_speed(self, next_wpt, speed):
         if self.curr_pt:
             dist = ((next_wpt[0] - self.curr_pt[0])**2 + (next_wpt[1] - self.curr_pt[1])**2)**0.5
-            print(dist/speed)
             time.sleep(dist/speed)
             
         self.curr_pt = next_wpt
@@ -55,4 +63,10 @@ class ControllerManager():
             self.current_trajectory = self.move_service.unpack_request()
             return self.current_trajectory.cartesian_traj
         else:
+            # Publish Joint Positions
+            self.publish_joints()
             return None
+
+    def publish_joints(self):
+        print(self.curr_joints)
+        self.joint_publisher.publish([self.curr_joints[0], self.curr_joints[1]])

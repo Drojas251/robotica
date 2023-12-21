@@ -1,68 +1,22 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 import sys
 import os
 import yaml
 
+# Sim
+from robotica_core.simulation.sim_core import SimCore
 from robotica_core.utils.yml_parser import RobotParamsLoader
 from robotica_core.utils.robotica_networking import RoboticaPublisher
 from robotica_core.control.controller_manager import ControllerManager
 from robotica_datatypes.kinematic_datatypes.DH_params import DH_parameters    
-from robotica_core.kinematics.tftree import TFTree
 
+# App
+from matplotlib.animation import FuncAnimation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
 from tkinter import ttk
 import matplotlib.animation as animation
 from tkinter import Frame,Label,Entry,Button
-
-class Visualization():
-    def __init__(self, DH_params):
-
-        self.plt = plt
-        self.figure, ax = self.plt.subplots()
-        ax.set_xlim(-1, 1)
-        ax.set_ylim(-1, 1)
-
-        # Arm Visual
-        self.arm_line, = ax.plot([], [], lw=5)
-
-        # Task Space Path Visual
-        self.path, = ax.plot([], [], lw=2)
-
-        # Robot Init Params
-        self.DH_params = DH_params
-        self.link_length_1 = self.DH_params.a[0]
-        self.link_length_2 = self.DH_params.a[1]
-        self.tftree = TFTree(DH_params)
-
-    def run(self):
-        self.plt.show()
-
-    def init_space(self):
-        theta1 = self.DH_params.theta[0]
-        theta2 = self.DH_params.theta[1]
-        self.visualize_arm(theta1, theta2)
-
-    def visualize_arm(self, theta1, theta2):
-        self.tftree.set_joints([theta1, theta2])
-        tree = self.tftree.get_tree()
-        x_values = []
-        y_values = []
-        for pt in tree:
-            x_values.append(pt[0])
-            y_values.append(pt[1])
-
-        self.arm_line.set_data(x_values, y_values)
-
-    def visualize_cartesian_path(self, cartesian_traj):
-        self._format_path_data(cartesian_traj)
-        self.path.set_data(self.x, self.y)
-
-    def _format_path_data(self, cartesian_traj):
-        self.x = [p.point[0] for p in cartesian_traj]
-        self.y = [p.point[1] for p in cartesian_traj]
 
 
 class PluginOption:
@@ -92,41 +46,36 @@ class SimApp(Frame):
     PLUGIN_FILE_PATH = "~/.robotica/plugins"
     SELECTED_PLUGIN_FILE = "run_plugins.yml"
 
-    def __init__(self, DH_params, master = None):
+    def __init__(self, DH_params, env_yml_file, master = None):
         Frame.__init__(self, master)
         self.master = master
 
-        self.vis_scene = Visualization(DH_params)
-        self.controller_manager = ControllerManager()
-        self.joint_publisher = RoboticaPublisher(port="5153", topic="joint_publisher")
-        self.curr_joints = DH_params.theta
+        self.sim = SimCore(DH_params, env_yml_file)
+        self.controller_manager = ControllerManager(DH_params.theta)
         self.sim_interval = 0.01
 
         # Plugins
         self.plugin_dict = {}
         self.plugin_menu = {}
         self._read_plugin_data()
-        
+                
         self._init_gui()
 
     def _update(self, frame):
         if not self.controller_manager.is_executing_path():
             traj = self.controller_manager.wait_for_joint_trajectory(1000)
             if traj:
-                self.vis_scene.visualize_cartesian_path(traj)
+                self.sim.vis_scene.visualize_cartesian_path(traj)
             else:
-                # Publish joint position
-                self._publish_joints()
                 return
 
         # Get next wpts to execute 
         theta1, theta2 = self.controller_manager.consume_wpt()
 
-        # Move Arm
-        self.vis_scene.visualize_arm(theta1, theta2)
-
-        self.curr_joints = (theta1, theta2)
-        self._publish_joints()
+        # Simulate
+        self.sim.update_tf_tree([theta1, theta2])
+        self.sim.render()
+        self.sim.check_for_collisions()
 
     def _set_plugins(self):
         run_plugins = {}
@@ -152,14 +101,10 @@ class SimApp(Frame):
 
         tk.Label(self,text="SHM Simulation").grid(column=0, row=3)
 
-        self.canvas = FigureCanvasTkAgg(self.vis_scene.figure, master=self)
+        self.canvas = FigureCanvasTkAgg(self.sim.vis_scene.figure, master=self)
         self.canvas.get_tk_widget().grid(column=0,row=4)
 
-        self.ani = FuncAnimation(self.vis_scene.figure, self._update, init_func=self.vis_scene.init_space, frames=np.arange(0, 10000, 1), interval=self.sim_interval, blit=False)
-
-    def _publish_joints(self):
-        self.joint_publisher.publish([self.curr_joints[0], self.curr_joints[1]])
-        print(f"Curr Joint Position: {self.curr_joints}")
+        self.ani = FuncAnimation(self.sim.vis_scene.figure, self._update, init_func=self.sim.vis_scene.init_space, frames=np.arange(0, 10000, 1), interval=self.sim_interval, blit=False)
 
     def _read_plugin_data(self):
         shared_plugin_path = os.path.expanduser(self.PLUGIN_FILE_PATH)
@@ -182,18 +127,21 @@ class SimApp(Frame):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) != 2:
-        print("Usage: python sim_env.py <file_path>")
+    if len(sys.argv) != 3:
+        print("Usage: python sim_env.py <robot_model_file_path> <env_file_path>")
         sys.exit(1)  # Exit with an error code
 
     # Get the yml_path from the command-line argument
-    yml_path = sys.argv[1]
-    param_loader = RobotParamsLoader(yml_path)
+    robot_yml_path = sys.argv[1]
+    param_loader = RobotParamsLoader(robot_yml_path)
     theta, a, d, alpha = param_loader.load_dh_params()
     DH_params = DH_parameters(theta, a, d, alpha)
 
+    # File that describes the environment
+    env_yml_path = sys.argv[2]
+
     root = tk.Tk()
     root.geometry("1200x700")
-    app = SimApp(DH_params, root)
+    app = SimApp(DH_params, env_yml_path, root)
     tk.mainloop()
 

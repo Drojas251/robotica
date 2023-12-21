@@ -55,3 +55,25 @@ class NetworkingParams(ParseYML):
         serv_req = data["service"]
         channel = serv_req[serv_name]
         return channel["port"]
+
+class SceneParamsLoader(ParseYML):
+    def __init__(self, params_yml_path):
+        super().__init__(params_yml_path)
+
+    def load_rectangles(self):
+        data = self._read_yml_file()
+        objs = data.get("objects", None)
+        if objs == None:
+            print("No objects loaded in the scene")
+            return None
+        
+        rectangles = []
+        for obj in objs.values():
+            obj_type = obj.get("type")
+            if obj_type == "rectangle":
+                rectangles.append(obj)
+
+        return rectangles
+
+
+
