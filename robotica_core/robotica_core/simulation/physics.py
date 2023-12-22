@@ -105,6 +105,10 @@ class CollisionManager:
                 env_obj = self.env_collision_objs.get_geom_name(c.o1)
                 robot_link = self.robot_collision_objs.get_geom_name(c.o2)
                 self._invoke_collision_callback(env_obj, robot_link)
+            
+            return True
+
+        return False
 
     def add_collision_callback(self, func):
         self.collision_callback_func = func

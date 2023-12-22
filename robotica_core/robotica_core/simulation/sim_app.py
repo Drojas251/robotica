@@ -75,7 +75,10 @@ class SimApp(Frame):
         # Simulate
         self.sim.update_tf_tree([theta1, theta2])
         self.sim.render()
-        self.sim.check_for_collisions()
+        collision = self.sim.collisions_detected()
+        
+        if collision:
+            self.controller_manager.collision_detected()
 
     def _set_plugins(self):
         run_plugins = {}

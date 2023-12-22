@@ -1,9 +1,15 @@
 import time
+from enum import Enum
 
 from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory
 from robotica_core.utils.yml_parser import NetworkingParams
 from robotica_core.utils.robotica_networking import RoboticaPublisher
 from robotica_core.utils.robotica_networking import RoboticaService
+
+class ControllerStatus(Enum):
+    SUCCESS = "move_succeeded"
+    FAILED_MOVE = "move_failed"
+    ERROR = "controller_in_error"
 
 
 class ControllerManager():
@@ -27,7 +33,7 @@ class ControllerManager():
         cartesian_wpt = self.current_trajectory.cartesian_traj.pop(0)
 
         if len(self.current_trajectory.joint_traj) == 0:
-            self.move_service.send_response("Move Completed")
+            self.move_service.send_response(ControllerStatus.SUCCESS)
 
         # check for speed
         if cartesian_wpt.velocity:
@@ -70,3 +76,8 @@ class ControllerManager():
     def publish_joints(self):
         print(self.curr_joints)
         self.joint_publisher.publish([self.curr_joints[0], self.curr_joints[1]])
+
+    def collision_detected(self):
+        self.current_trajectory.cartesian_traj = []
+        self.current_trajectory.joint_traj = []
+        self.move_service.send_response(ControllerStatus.ERROR)

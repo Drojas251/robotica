@@ -23,10 +23,10 @@ class SimCore:
     def render(self):
         self.vis_scene.visualize_arm()
 
-    def check_for_collisions(self):
+    def collisions_detected(self):
         link_tfs = self.tftree.get_link_tfs()
         self.collision_checker.update_robot_tfs(link_tfs)
-        self.collision_checker.check_collision()
+        return self.collision_checker.check_collision()
 
     def _collision_callback(self, env_obj, robot_link):
         self.vis_scene.vis_collision(env_obj)

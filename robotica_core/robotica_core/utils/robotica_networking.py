@@ -58,8 +58,8 @@ class RoboticaService:
         serialized_data = self.data_socket.recv()
         return pickle.loads(serialized_data)
     
-    def send_response(self, msg):
-        self.data_socket.send_string(msg)
+    def send_response(self, data):
+        self.data_socket.send(pickle.dumps(data))
 
 
 class RoboticaClient:
@@ -73,7 +73,7 @@ class RoboticaClient:
         self.socket.send(message)
 
         # Blocks until reply msg is received 
-        reply_message = self.socket.recv_string()
+        reply_message = pickle.loads(self.socket.recv())
         return reply_message
 
 
