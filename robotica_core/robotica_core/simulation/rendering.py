@@ -45,7 +45,7 @@ class Visualization():
         self.link_length_2 = self.DH_params.a[1]
         self.tftree = tftree
 
-        self.collision_objs = []
+        self.collision_objs = {}
 
     def run(self):
         self.plt.show()
@@ -70,10 +70,14 @@ class Visualization():
         self._format_path_data(cartesian_traj)
         self.path.set_data(self.x, self.y)
 
-    def add_rectangle_obj(self, origin, size):
+    def add_rectangle_obj(self, name, origin, size):
         rectangle = Rectangle(self.figure, self.ax, origin, size)
         rectangle.build_shape()
-        self.collision_objs.append(rectangle)
+        self.collision_objs[name] = rectangle
+
+    def vis_collision(self, obj_name):
+        obj = self.collision_objs[obj_name]
+        obj.collision()
 
     def _format_path_data(self, cartesian_traj):
         self.x = [p.point[0] for p in cartesian_traj]

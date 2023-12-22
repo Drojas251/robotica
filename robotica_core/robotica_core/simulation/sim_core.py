@@ -5,8 +5,6 @@ from robotica_core.kinematics.tftree import TFTree
 from robotica_core.utils.yml_parser import SceneParamsLoader
 
 
-
-
 class SimCore:
     def __init__(self, DH_params, env_yml_file):
         self.scene_params = SceneParamsLoader(env_yml_file)
@@ -15,6 +13,7 @@ class SimCore:
         self.collision_checker = CollisionManager(self.tftree.get_link_tfs(), DH_params.a)
         
         # Load Collision Checking Data
+        self.collision_checker.add_collision_callback(self._collision_callback)
         self._load_env_data()
         self.collision_checker.init_collision_managers()
 
@@ -29,11 +28,14 @@ class SimCore:
         self.collision_checker.update_robot_tfs(link_tfs)
         self.collision_checker.check_collision()
 
+    def _collision_callback(self, env_obj, robot_link):
+        self.vis_scene.vis_collision(env_obj)
+
     def _load_env_data(self):
         #Load Rectangle Objects
         rectangle_objs = self.scene_params.load_rectangles()
 
-        for rect_obj in rectangle_objs:
+        for name, rect_obj in rectangle_objs.items():
             pose_dict = rect_obj["pose"]
             size_dict = rect_obj["size"]
 
@@ -44,7 +46,7 @@ class SimCore:
             size_x = size_dict["x"]
             size_y = size_dict["y"]
 
-            self.collision_checker.env_collision_objs.add_box_collision_obj(size_x, size_y, pose)
-            self.vis_scene.add_rectangle_obj((x - 0.5*size_x, y - 0.5*size_y), (size_x, size_y))
+            self.collision_checker.env_collision_objs.add_box_collision_obj(name, size_x, size_y, pose)
+            self.vis_scene.add_rectangle_obj(name, (x - 0.5*size_x, y - 0.5*size_y), (size_x, size_y))
 
 

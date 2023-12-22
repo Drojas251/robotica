@@ -67,11 +67,11 @@ class SceneParamsLoader(ParseYML):
             print("No objects loaded in the scene")
             return None
         
-        rectangles = []
-        for obj in objs.values():
+        rectangles = {}
+        for name, obj in objs.items():
             obj_type = obj.get("type")
             if obj_type == "rectangle":
-                rectangles.append(obj)
+                rectangles[name] = obj
 
         return rectangles
 

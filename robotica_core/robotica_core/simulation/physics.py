@@ -6,31 +6,49 @@ class CollisionObjs:
         self.collision_objs = []
         self.collsion_manager = None
 
-    def create_box_collision_obj(self,l, h, R, T):
+        self._geom_obj = []
+        self._obj_names = []
+
+        self.geom_id_to_obj = {}
+        self.geom_id_to_name = {}
+
+
+    def create_box_collision_obj(self, name, l, h, R, T):
         # This function makes a box primitve collision object
         box = fcl.Box(l,h,0.1)
         transform = fcl.Transform(R, T)
         collision_obj = fcl.CollisionObject(box, transform)
-        return collision_obj
 
-    def add_collision_obj(self, collision_obj):
+        self._geom_obj.append(box)
+        self._obj_names.append(name)
         self.collision_objs.append(collision_obj)
 
     def make_collision_manager(self):
-        # This function makes a collision manager for a group of collision objects 
+        # Create mappings for obs
+        self._map_obj_to_obj_names()
+
         manager = fcl.DynamicAABBTreeCollisionManager()
         manager.registerObjects(self.collision_objs)
         manager.setup()
         self.collsion_manager = manager
 
+    def get_geom_name(self, coll_geom):
+        return self.geom_id_to_name[id(coll_geom)]
+
+    def _map_obj_to_obj_names(self):
+        # Create map from geometry IDs to objects
+        self.geom_id_to_obj = { id(geom) : obj for geom, obj in zip(self._geom_obj, self.collision_objs) }
+
+        # Create map from geometry IDs to string names
+        self.geom_id_to_name = { id(geom) : name for geom, name in zip(self._geom_obj, self._obj_names) }
+
 class EnvCollisionObjs(CollisionObjs):
     def __init__(self):
         CollisionObjs.__init__(self)
 
-    def add_box_collision_obj(self, l, h, T):
+    def add_box_collision_obj(self, name, l, h, T):
         R = [[1,0,0], [0,1,0], [0,0,1]]
-        coll_obj = self.create_box_collision_obj(l, h, R, T)
-        self.add_collision_obj(coll_obj)
+        self.create_box_collision_obj(name, l, h, R, T)
 
 class RobotCollisionObjs(CollisionObjs):
     def __init__(self, init_link_transforms, link_lengths):
@@ -45,8 +63,7 @@ class RobotCollisionObjs(CollisionObjs):
             tf = self.link_transforms[i]
             R = tf[:3, :3]
             T = tf[:3, -1]
-            link_coll_obj = self.create_box_collision_obj(self.link_lengths[i], 0.005, R, T)
-            self.add_collision_obj(link_coll_obj)
+            self.create_box_collision_obj(f"link{i}", self.link_lengths[i], 0.005, R, T)
         self.make_collision_manager()
 
     def update_transforms(self, tf_list):
@@ -61,6 +78,8 @@ class CollisionManager:
         self.robot_collision_objs = RobotCollisionObjs(init_link_transforms, link_lengths)
         self.env_collision_objs = EnvCollisionObjs()
         self.collision_data = None
+
+        self.collision_callback_func = None
 
     def update_robot_tfs(self, tf_list):
         self.robot_collision_objs.update_transforms(tf_list)
@@ -83,5 +102,14 @@ class CollisionManager:
         if in_collision:
             print(f"Collision Detected!")
             for c in collision_data.result.contacts:
-                print(f"{c.o1} and {c.o2}")
+                env_obj = self.env_collision_objs.get_geom_name(c.o1)
+                robot_link = self.robot_collision_objs.get_geom_name(c.o2)
+                self._invoke_collision_callback(env_obj, robot_link)
+
+    def add_collision_callback(self, func):
+        self.collision_callback_func = func
+
+    def _invoke_collision_callback(self, *args):
+        self.collision_callback_func(*args)
+
 
