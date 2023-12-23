@@ -1,6 +1,7 @@
 from robotica_core.api.robotica_interface import RoboticaCore
 from robotica_plugins.kinematics.definition import Kinematics_Plugins
 from robotica_plugins.trajectory_planners.definition import Trajectory_Planners_Plugins
+from robotica_plugins.path_planners.definition import Path_Planners_Plugins
 from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory, JointTrajectoryPoint, CartesianTrajectoryPoint
 from robotica_datatypes.path_datatypes.waypoint import WayPoint
 
@@ -12,6 +13,7 @@ class RobotAPI(RoboticaCore):
             robot_yml_file, 
             kinematics_plugins = Kinematics_Plugins, 
             cartesian_traj_plugins = Trajectory_Planners_Plugins,
+            path_planner_plugins = Path_Planners_Plugins,
         )
 
     #############################
@@ -35,18 +37,20 @@ class RobotAPI(RoboticaCore):
     def get_current_joint_positions(self):
         return self.robot_model.get_current_pos()
     
+    def plan_and_execute(self, goal):
+        curr_joints = self.get_current_joint_positions()
+        curr_pos = self.kinematics.forward_kinematics(curr_joints)
+
+        path = self.path_planner.plan(curr_pos, goal)
+        self.execute_path(path)
+
+
     def execute_path(self, path):
         """ Move arm along a path 
 
         Args: 
             path[List]: A list of wpts
         """
-
-        curr_joints = self.get_current_joint_positions()
-        curr_pos = self.kinematics.forward_kinematics(curr_joints)
-        cur_wpt = WayPoint(curr_pos, 0)
-        path.insert(0, cur_wpt)
-
         trajectory = self.cartesian_trajectory_planner.cartesian_trajectory(path)
         self.controller.execute_move(trajectory)
     
@@ -100,5 +104,17 @@ class RobotAPI(RoboticaCore):
                     trajectory (Trajectory)
         """
         return self._controller
+
+    @property
+    def path_planner(self):
+        """ Returns Path Planner Interface
+
+        Available Class Methods:
+            plan
+                args: 
+                    start (tuple)
+                    goal (tuple)
+        """
+        return self._path_planner
 
 

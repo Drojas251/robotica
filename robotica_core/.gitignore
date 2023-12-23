@@ -3,6 +3,8 @@ robotica_core.egg-info/
 robotica_core/__pycache__/
 robotica_core/control/__pycache__/
 robotica_core/kinematics/__pycache__/
+robotica_core/path_planning/__pycache__/
 robotica_core/trajectory_planning/__pycache__/
+robotica_core/simulation/__pycache__/
 robotica_core/utils/__pycache__/
 robotica_core/api/__pycache__/

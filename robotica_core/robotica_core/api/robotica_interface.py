@@ -8,10 +8,11 @@ class RoboticaCore:
     PLUGIN_FILE_PATH = "~/.robotica/plugins"
     SELECTED_PLUGIN_FILE = "run_plugins.yml"
 
-    def __init__(self, robot_yml_file, kinematics_plugins=None, cartesian_traj_plugins=None):
+    def __init__(self, robot_yml_file, kinematics_plugins=None, cartesian_traj_plugins=None, path_planner_plugins=None):
         self._robot_model = RobotModel(robot_yml_file)
         self._kinematics = None
         self._cartesian_trajectory_planner = None
+        self._path_planner = None
 
         shared_plugin_path = os.path.expanduser(self.PLUGIN_FILE_PATH)
         run_plugin_path = os.path.join(shared_plugin_path, "run_plugins.yml")
@@ -20,6 +21,7 @@ class RoboticaCore:
 
         self._load_kinematics_plugins(kinematics_plugins)
         self._load_cartesian_traj_plugins(cartesian_traj_plugins)
+        self._load_path_planner_plugins(path_planner_plugins)
 
         self._controller = ControllerInterface()
 
@@ -54,4 +56,20 @@ class RoboticaCore:
             raise Exception("Cartesian Trajectory Plugin Not Found")
 
         self._cartesian_trajectory_planner = traj_planner
+
+    def _load_path_planner_plugins(self, path_planner_plugins):
+        if path_planner_plugins == None:
+            raise Exception("No Path Planner Plugin Loaded")
+
+        path_planner = None
+        for plugin_cls_name in self.plugin_dict.values():
+            if plugin_cls_name in path_planner_plugins:
+                print(f"Using Path Planner Plugin: {plugin_cls_name}")
+                path_planner_cls = path_planner_plugins[plugin_cls_name]
+                path_planner = path_planner_cls(None)
+
+        if path_planner == None:
+            raise Exception("Path Planner Plugin Not Found")
+
+        self._path_planner = path_planner
 
