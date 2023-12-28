@@ -1,6 +1,8 @@
 import zmq
 import threading
 import pickle
+import base64
+
 
 class RoboticaPublisher:
     def __init__(self, port, topic):
@@ -10,17 +12,16 @@ class RoboticaPublisher:
         self.topic = topic
 
     def publish(self, data):
-        #pickled_data = pickle.dumps(data)
-        msg = { f"{self.topic}": data }
+        pickled_data = pickle.dumps(data)
+        base64_encoded_data = base64.b64encode(pickled_data).decode('utf-8')
+        msg = { f"{self.topic}": base64_encoded_data }
         self.socket.send_json(msg)
-        #self.socket.send_string(f"{self.topic} {pickled_data}")
 
 class RoboticaSubscriber:
     def __init__(self, port, topic):
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.SUB)
         self.socket.connect(f"tcp://localhost:{port}")
-        #self.socket.setsockopt_string(zmq.SUBSCRIBE, "")
         self.socket.setsockopt(zmq.SUBSCRIBE, b"")
 
         self.topic = topic
@@ -35,7 +36,10 @@ class RoboticaSubscriber:
             msg = self.socket.recv_json()
 
             if topic in msg:
-                data = msg[self.topic]
+                base64_encoded_data = msg[self.topic]
+                pickled_data = base64.b64decode(base64_encoded_data)
+                data = pickle.loads(pickled_data)
+
                 callback(data)
 
 class RoboticaService:
