@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from robotica_core.utils.robotica_networking import RoboticaSubscriber
+from robotica_core.utils.yml_parser import NetworkingParams
+
 
 class Shape:
     def __init__(self, fig, ax, origin): 
@@ -36,8 +39,11 @@ class Visualization():
         # Arm Visual
         self.arm_line, = ax.plot([], [], lw=5)
 
-        # Task Space Path Visual
-        self.path, = ax.plot([], [], lw=2)
+        # Task Space Trajectory Visual
+        self.trajectory, = ax.plot([], [], lw=2)
+
+        # Task Space Planned Path Visual
+        self.planned_path, = ax.plot([], [], lw=1, color='green', marker='o', markersize=8)
 
         # Robot Init Params
         self.DH_params = DH_params
@@ -46,6 +52,11 @@ class Visualization():
         self.tftree = tftree
 
         self.collision_objs = {}
+
+        networking_params = NetworkingParams() 
+        topic, port = networking_params.get_pub_sub_info("path_publisher")
+        self.path_listener = RoboticaSubscriber(port=port, topic=topic)
+        self.path_listener.subscribe(callback=self._path_listener_callback)
 
     def run(self):
         self.plt.show()
@@ -66,9 +77,9 @@ class Visualization():
 
         self.arm_line.set_data(x_values, y_values)
 
-    def visualize_cartesian_path(self, cartesian_traj):
-        self._format_path_data(cartesian_traj)
-        self.path.set_data(self.x, self.y)
+    def visualize_cartesian_trajectory(self, cartesian_traj):
+        x, y = self._format_path_data(cartesian_traj)
+        self.trajectory.set_data(x, y)
 
     def add_rectangle_obj(self, name, origin, size):
         rectangle = Rectangle(self.figure, self.ax, origin, size)
@@ -80,5 +91,17 @@ class Visualization():
         obj.collision()
 
     def _format_path_data(self, cartesian_traj):
-        self.x = [p.point[0] for p in cartesian_traj]
-        self.y = [p.point[1] for p in cartesian_traj]
+        x = [p.point[0] for p in cartesian_traj]
+        y = [p.point[1] for p in cartesian_traj]
+
+        return x, y
+
+    def _path_listener_callback(self, data):
+        x = []
+        y = []
+        for wpt in data:
+            point = wpt.point
+            x.append(point[0])
+            y.append(point[1])
+
+        self.planned_path.set_data(x,y)

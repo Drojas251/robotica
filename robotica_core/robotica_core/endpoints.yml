@@ -2,7 +2,11 @@ pub_sub:
   joint_publisher:
     topic: "joint_publisher"
     port: "5153"
-
+  path_publisher:
+    topic: "planned_path"
+    port: "5233"
+    
 service:
   move_service:
     port: "5555"
+  
