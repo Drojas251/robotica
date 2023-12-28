@@ -74,7 +74,7 @@ class ControllerManager():
             return None
 
     def publish_joints(self):
-        print(self.curr_joints)
+        #print(self.curr_joints)
         self.joint_publisher.publish([self.curr_joints[0], self.curr_joints[1]])
 
     def collision_detected(self):
