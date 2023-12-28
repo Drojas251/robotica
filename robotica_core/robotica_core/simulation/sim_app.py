@@ -108,9 +108,16 @@ class SimGUI:
         self.set_plugins_button.grid(row=0,column=3)
         self.set_plugins_button.bind(lambda e:self._set_plugins)
 
-        self._init_plugins()
+        self.reload_sim_button = Button(self.plugin_frame,text="Reload Sim",command=self._reload_sim,width=12)
+        self.reload_sim_button.grid(row=1,column=3)
+        self.reload_sim_button.bind(lambda e:self._reload_sim)
 
+        self._init_plugins()
         self.sim_env.start_sim()
+
+    def _reload_sim(self):
+        self._read_plugin_data()
+        self._init_plugins()
 
     def _read_plugin_data(self):
         shared_plugin_path = os.path.expanduser(self.PLUGIN_FILE_PATH)
