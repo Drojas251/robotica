@@ -12,7 +12,6 @@ class CollisionObjs:
         self.geom_id_to_obj = {}
         self.geom_id_to_name = {}
 
-
     def create_box_collision_obj(self, name, l, h, R, T):
         # This function makes a box primitve collision object
         box = fcl.Box(l,h,0.1)
@@ -23,10 +22,10 @@ class CollisionObjs:
         self._obj_names.append(name)
         self.collision_objs.append(collision_obj)
 
-    def make_collision_manager(self):
-        # Create mappings for obs
         self._map_obj_to_obj_names()
 
+    def make_collision_manager(self):
+        # Create mappings for obs
         manager = fcl.DynamicAABBTreeCollisionManager()
         manager.registerObjects(self.collision_objs)
         manager.setup()
@@ -34,6 +33,28 @@ class CollisionObjs:
 
     def get_geom_name(self, coll_geom):
         return self.geom_id_to_name[id(coll_geom)]
+
+    def get_coll_obj(self, name):
+        geom = self.get_geom_from_name(name)
+        if geom != None:
+            return self.geom_id_to_obj[geom]
+
+    def get_geom_from_name(self, name):
+        for geom, obj_name in self.geom_id_to_name.items():
+            if name == obj_name:
+                return geom
+
+    def remove_coll_obj(self, name):
+        col_obj = self.get_coll_obj(name)
+        index = None
+
+        for i, obj in enumerate(self.collision_objs):
+            if obj == col_obj:
+                index = i
+
+        del self.collision_objs[index]
+
+        self._map_obj_to_obj_names()
 
     def _map_obj_to_obj_names(self):
         # Create map from geometry IDs to objects
@@ -87,6 +108,9 @@ class CollisionManager:
     def init_collision_managers(self):
         self.env_collision_objs.make_collision_manager()
         self.robot_collision_objs.make_collision_manager()
+
+    def remove_env_collision_obj(self, name):
+        self.env_collision_objs.remove_coll_obj(name)
 
     def check_collision(self):
         req = None

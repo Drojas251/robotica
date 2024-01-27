@@ -12,11 +12,21 @@ class Shape:
         self.collision_color = 'red'
         self.default_color = 'blue'
 
+    def build_shape(self):
+        pass
+
+    def collision(self):
+        pass
+
+    def clear_shape(self):
+        pass
+
 class Rectangle(Shape):
     def __init__(self, fig, ax, origin, size):
         Shape.__init__(self, fig, ax, origin)
         self.l = size[0]
         self.h = size[1]
+        self.square = None
 
     def build_shape(self):
         self.square = plt.Rectangle(self.origin, self.l, self.h, linewidth=2, facecolor=self.default_color)
@@ -25,6 +35,9 @@ class Rectangle(Shape):
     def collision(self):
         self.square.set_facecolor(self.collision_color)
         self.fig.canvas.draw()
+
+    def clear_shape(self):
+        self.square.remove()
 
 class Visualization():
     def __init__(self, DH_params, tftree):
@@ -85,6 +98,10 @@ class Visualization():
         rectangle = Rectangle(self.figure, self.ax, origin, size)
         rectangle.build_shape()
         self.collision_objs[name] = rectangle
+
+    def remove_rectangle_obj(self, name):
+        self.collision_objs[name].clear_shape()
+        del self.collision_objs[name]
 
     def vis_collision(self, obj_name):
         obj = self.collision_objs[obj_name]

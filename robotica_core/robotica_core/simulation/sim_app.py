@@ -119,6 +119,8 @@ class SimGUI:
         self._read_plugin_data()
         self._init_plugins()
 
+        self.sim_env.sim_core.reset_env()
+
     def _read_plugin_data(self):
         shared_plugin_path = os.path.expanduser(self.PLUGIN_FILE_PATH)
         yaml_file_path = os.path.join(shared_plugin_path, "plugins.yml")
@@ -220,13 +222,6 @@ class RoboticaApp:
     def __init__(self, DH_params, env_yml_file, master):
         self.master = master
 
-        # Sim Display and Interface Module
-        self.sim_gui_frame = tk.Frame(self.master, borderwidth=2, relief="ridge")
-        self.sim_gui_frame.pack(side="left", fill="both", expand=True)
-        self.sim_gui_frame.grid_rowconfigure(0, weight=1)
-        self.sim_gui_frame.grid_rowconfigure(1, weight=1)
-        self.sim_gui = SimGUI(DH_params, env_yml_file, self.sim_gui_frame)
-
         # Logging Module
         self.logging_frame = tk.Frame(self.master, borderwidth=2, relief="ridge")
         self.logging_frame.pack(side="right", fill="both", expand=True)
@@ -234,9 +229,16 @@ class RoboticaApp:
         self.logging_frame.grid_rowconfigure(1, weight=1)
         self.gui_logging = GuiLogging(self.logging_frame)
 
+        # Sim Display and Interface Module
+        self.sim_gui_frame = tk.Frame(self.master, borderwidth=2, relief="ridge")
+        self.sim_gui_frame.pack(side="left", fill="both", expand=True)
+        self.sim_gui_frame.grid_rowconfigure(0, weight=1)
+        self.sim_gui_frame.grid_rowconfigure(1, weight=1)
+        self.sim_gui = SimGUI(DH_params, env_yml_file, self.sim_gui_frame)
+
     def init_gui(self):
-        self.sim_gui.setup_ui_module()
         self.gui_logging.setup_ui_module()
+        self.sim_gui.setup_ui_module()
 
 
 if __name__ == "__main__":
