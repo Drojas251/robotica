@@ -11,6 +11,7 @@ from robotica_core.utils.robotica_networking import RoboticaPublisher
 from robotica_core.utils.robotica_networking import RoboticaSubscriber
 from robotica_core.control.controller_manager import ControllerManager
 from robotica_datatypes.kinematic_datatypes.DH_params import DH_parameters    
+from robotica_core.kinematics.robot_model import RobotModelBase
 from matplotlib.animation import FuncAnimation
 
 # App
@@ -20,10 +21,10 @@ from tkinter import ttk
 from tkinter import Frame,Label,Entry,Button
 
 class SimEnv:
-    def __init__(self, DH_params, env_yml_file):
-        self.sim_core = SimCore(DH_params, env_yml_file)
+    def __init__(self, robot_model, env_yml_file):
+        self.sim_core = SimCore(robot_model, env_yml_file)
         self.rendering = self.sim_core.vis_scene.figure
-        self.controller_manager = ControllerManager(DH_params.theta)
+        self.controller_manager = ControllerManager(robot_model.DH_params.theta)
         self.sim = None
 
     def start_sim(self):
@@ -82,9 +83,10 @@ class SimGUI:
     PLUGIN_FILE_PATH = "~/.robotica/plugins"
     SELECTED_PLUGIN_FILE = "run_plugins.yml"
 
-    def __init__(self, DH_params, env_yml_file, master):
-        self.master = master
-        self.sim_env = SimEnv(DH_params, env_yml_file)
+    def __init__(self, robot_model, env_yml_file, sim_control_frame, vis_control_frame):
+        self.sim_control_frame = sim_control_frame
+        self.vis_control_frame = vis_control_frame
+        self.sim_env = SimEnv(robot_model, env_yml_file)
 
         # Plugins
         self.plugin_dict = {}
@@ -93,7 +95,7 @@ class SimGUI:
                 
     def setup_ui_module(self):
         # Define sim frame        
-        self.sim_frame = tk.Frame(self.master, borderwidth=2, relief="ridge")
+        self.sim_frame = tk.Frame(self.sim_control_frame, borderwidth=2, relief="ridge")
         self.sim_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         tk.Label(self.sim_frame,text="Robotica Simulation").grid(column=0, row=0)
 
@@ -101,7 +103,7 @@ class SimGUI:
         self.canvas.get_tk_widget().grid(column=0,row=1)
 
         # Define Plugin Frame
-        self.plugin_frame = tk.Frame(self.master, borderwidth=2, relief="ridge")
+        self.plugin_frame = tk.Frame(self.sim_control_frame, borderwidth=2, relief="ridge")
         self.plugin_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
         self.set_plugins_button = Button(self.plugin_frame,text="Set Plugins",command=self._set_plugins,width=12)
@@ -112,9 +114,40 @@ class SimGUI:
         self.reload_sim_button.grid(row=1,column=3)
         self.reload_sim_button.bind(lambda e:self._reload_sim)
 
+        # Vis control frame
+        self.vis_frame = tk.Frame(self.vis_control_frame, borderwidth=2, relief="ridge")
+        self.vis_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.vis_frame.grid_columnconfigure(0, weight=1)
+        self.vis_frame.grid_columnconfigure(1, weight=1)
+
+        # Create a variable to hold the checkbox state
+        self._show_ws_check = tk.BooleanVar()
+        self.workspace_button = tk.Checkbutton(self.vis_frame, text="Show Workspace", variable=self._show_ws_check, command=self._show_ws)
+        self.workspace_button.grid(row=0,column=1)
+
+        self._show_tftree_check = tk.BooleanVar()
+        self.tftree_button = tk.Checkbutton(self.vis_frame, text="Show TF Tree", variable=self._show_tftree_check, command=self._show_tftree)
+        self.tftree_button.grid(row=0,column=0)
+
+        self._show_planning_check = tk.BooleanVar()
+        self.planning_button = tk.Checkbutton(self.vis_frame, text="Show Planning", variable=self._show_planning_check, command=self._show_planning)
+        self.planning_button.grid(row=1,column=0)
+
         self._init_plugins()
         self.sim_env.start_sim()
 
+    def _show_ws(self):
+        if self._show_ws_check.get():
+            self.sim_env.sim_core.vis_scene.visualize_workspace()
+        else:
+            self.sim_env.sim_core.vis_scene.clear_workspace()
+
+    def _show_tftree(self):
+        pass
+
+    def _show_planning(self):
+        pass
+        
     def _reload_sim(self):
         self._read_plugin_data()
         self._init_plugins()
@@ -187,24 +220,31 @@ class GuiLogging:
         self.joint_listener = RoboticaSubscriber(port=port, topic=topic)
         self.joint_listener.subscribe(callback=self._joint_listener_callback)
 
+        # Bottom of the right frame is the logging frame
+        self.logging_frame = tk.Frame(self.master, borderwidth=2, relief="ridge",width=100, height=20)
+        self.logging_frame.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        self.logging_frame.grid_rowconfigure(0, weight=1)
+        self.logging_frame.grid_rowconfigure(1, weight=1)
+
     def setup_ui_module(self):
-        self._setup_console_logger()
+        #self._setup_console_logger()
         self._setup_joint_logger()
+        self._setup_console_logger()
         
     def _setup_console_logger(self):
-        self.console_frame = tk.Frame(self.master, borderwidth=2, relief="ridge")
-        self.console_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.console_frame = tk.Frame(self.logging_frame, borderwidth=2, relief="ridge",width=100, height=5)
+        self.console_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
         tk.Label(self.console_frame,text="Status").grid(column=0, row=0)
 
-        self.console_text = tk.Text(self.console_frame, wrap=tk.WORD, height=10, width=60)
+        self.console_text = tk.Text(self.console_frame, wrap=tk.WORD, height=5, width=60)
         self.console_text.grid(row=1, column=0)
 
         # Redirect console outputs to the Text widget
         sys.stdout = ContinousLogger(self.console_text)
 
     def _setup_joint_logger(self):
-        self.joint_frame = tk.Frame(self.master, borderwidth=2, relief="ridge")
-        self.joint_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        self.joint_frame = tk.Frame(self.logging_frame, borderwidth=2, relief="ridge")
+        self.joint_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         tk.Label(self.joint_frame,text="Joint Angles").grid(column=0, row=0)
 
         self.joint_text = tk.Text(self.joint_frame, wrap=tk.WORD, height=5, width=60)
@@ -219,22 +259,22 @@ class GuiLogging:
         self.joint_logger.write(msg)
 
 class RoboticaApp:           
-    def __init__(self, DH_params, env_yml_file, master):
+    def __init__(self, robot_model, env_yml_file, master):
         self.master = master
 
         # Logging Module
-        self.logging_frame = tk.Frame(self.master, borderwidth=2, relief="ridge")
-        self.logging_frame.pack(side="right", fill="both", expand=True)
-        self.logging_frame.grid_rowconfigure(0, weight=1)
-        self.logging_frame.grid_rowconfigure(1, weight=1)
-        self.gui_logging = GuiLogging(self.logging_frame)
+        self.right_frame = tk.Frame(self.master, borderwidth=2, relief="ridge")
+        self.right_frame.pack(side="right", fill="both", expand=True)
+        self.right_frame.grid_rowconfigure(0, weight=1)
+        self.right_frame.grid_rowconfigure(1, weight=1)
+        self.gui_logging = GuiLogging(self.right_frame)
 
         # Sim Display and Interface Module
         self.sim_gui_frame = tk.Frame(self.master, borderwidth=2, relief="ridge")
         self.sim_gui_frame.pack(side="left", fill="both", expand=True)
         self.sim_gui_frame.grid_rowconfigure(0, weight=1)
         self.sim_gui_frame.grid_rowconfigure(1, weight=1)
-        self.sim_gui = SimGUI(DH_params, env_yml_file, self.sim_gui_frame)
+        self.sim_gui = SimGUI(robot_model, env_yml_file, self.sim_gui_frame, self.right_frame)
 
     def init_gui(self):
         self.gui_logging.setup_ui_module()
@@ -249,16 +289,14 @@ if __name__ == "__main__":
 
     # Get the yml_path from the command-line argument
     robot_yml_path = sys.argv[1]
-    param_loader = RobotParamsLoader(robot_yml_path)
-    theta, a, d, alpha = param_loader.load_dh_params()
-    DH_params = DH_parameters(theta, a, d, alpha)
+    robot_model = RobotModelBase(robot_yml_path)
 
     # File that describes the environment
     env_yml_path = sys.argv[2]
 
     root = tk.Tk()
     root.geometry("1200x700")
-    app = RoboticaApp(DH_params, env_yml_path, root)
+    app = RoboticaApp(robot_model, env_yml_path, root)
     app.init_gui()
     tk.mainloop()
 

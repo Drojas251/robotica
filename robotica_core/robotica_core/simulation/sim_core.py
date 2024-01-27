@@ -6,12 +6,13 @@ from robotica_core.utils.yml_parser import SceneParamsLoader
 
 
 class SimCore:
-    def __init__(self, DH_params, env_yml_file):
+    def __init__(self, robot_model, env_yml_file):
         self._rectangle_objs = {}
         self.scene_params = SceneParamsLoader(env_yml_file)
-        self.tftree = TFTree(DH_params)
-        self.vis_scene = Visualization(DH_params, self.tftree)
-        self.collision_checker = CollisionManager(self.tftree.get_link_tfs(), DH_params.a)
+        self.robot_model = robot_model
+        self.tftree = TFTree(self.robot_model.DH_params)
+        self.vis_scene = Visualization(self.robot_model, self.tftree)
+        self.collision_checker = CollisionManager(self.tftree.get_link_tfs(), self.robot_model.DH_params.a)
         
         # Load Collision Checking Data
         self.collision_checker.add_collision_callback(self._collision_callback)

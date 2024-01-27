@@ -40,7 +40,7 @@ class Rectangle(Shape):
         self.square.remove()
 
 class Visualization():
-    def __init__(self, DH_params, tftree):
+    def __init__(self, robot_model, tftree):
 
         self.plt = plt
         self.figure, ax = self.plt.subplots()
@@ -58,8 +58,12 @@ class Visualization():
         # Task Space Planned Path Visual
         self.planned_path, = ax.plot([], [], lw=1, color='green', marker='o', markersize=8)
 
+        # WS Visual
+        self.ws, = self.plt.plot([], [],'o', c=[0,1,0,0.1], alpha=0.05)
+
         # Robot Init Params
-        self.DH_params = DH_params
+        self.robot_model = robot_model
+        self.DH_params = self.robot_model.DH_params
         self.link_length_1 = self.DH_params.a[0]
         self.link_length_2 = self.DH_params.a[1]
         self.tftree = tftree
@@ -93,6 +97,12 @@ class Visualization():
     def visualize_cartesian_trajectory(self, cartesian_traj):
         x, y = self._format_path_data(cartesian_traj)
         self.trajectory.set_data(x, y)
+
+    def visualize_workspace(self):
+        self.ws.set_data(self.robot_model.x_p, self.robot_model.y_p)
+
+    def clear_workspace(self):
+        self.ws.set_data([], [])
 
     def add_rectangle_obj(self, name, origin, size):
         rectangle = Rectangle(self.figure, self.ax, origin, size)
