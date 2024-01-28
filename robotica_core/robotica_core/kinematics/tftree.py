@@ -15,7 +15,7 @@ class TFTree:
         tree.append(self.origin)
 
         for i in range(self.num_joints):
-            A_i = self._get_base_transform(i+1)
+            A_i = self.get_base_transform(i+1)
             tree.append(self._get_translation(A_i))
 
         return tree
@@ -48,7 +48,7 @@ class TFTree:
     def _get_translation(self, A):
         return (A[0][3], A[1][3])
 
-    def _get_base_transform(self, joint_num):
+    def get_base_transform(self, joint_num):
         transforms = []
         for i in range(joint_num):
             theta = self.DH_params.theta[i]

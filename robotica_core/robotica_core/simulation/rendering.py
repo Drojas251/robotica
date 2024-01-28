@@ -10,7 +10,7 @@ class Shape:
         self.ax = ax
         self.fig = fig
         self.collision_color = 'red'
-        self.default_color = 'blue'
+        self._color = 'blue'
 
     def build_shape(self):
         pass
@@ -21,6 +21,9 @@ class Shape:
     def clear_shape(self):
         pass
 
+    def set_color(self, color):
+        self._color = color
+
 class Rectangle(Shape):
     def __init__(self, fig, ax, origin, size):
         Shape.__init__(self, fig, ax, origin)
@@ -29,7 +32,7 @@ class Rectangle(Shape):
         self.square = None
 
     def build_shape(self):
-        self.square = plt.Rectangle(self.origin, self.l, self.h, linewidth=2, facecolor=self.default_color)
+        self.square = plt.Rectangle(self.origin, self.l, self.h, linewidth=2, facecolor=self._color)
         self.ax.add_patch(self.square)
 
     def collision(self):
@@ -50,7 +53,18 @@ class Visualization():
         self.ax = ax
 
         # Arm Visual
-        self.arm_line, = ax.plot([], [], lw=5)
+        self.arm_links, = ax.plot([], [], lw=5, color='grey')
+        self.arm_joints, = ax.plot([], [], color='grey', marker='o', markersize=8, markerfacecolor='red', markeredgecolor='black')
+        self.gripper, = ax.plot([], [], color='black', lw=4)
+        self.gripper_pts = [
+            np.array([[0.02], [0.04], [0.0], [1.0]]),
+            np.array([[0.0], [0.04], [0.0], [1.0]]),
+            np.array([[0.0], [-0.04], [0.0], [1.0]]),
+            np.array([[0.02], [-0.04], [0.0], [1.0]]),
+        ]
+        
+        self.arm_stand = None
+        self.arm_base = None
 
         # Task Space Trajectory Visual
         self.trajectory, = ax.plot([], [], lw=2)
@@ -92,7 +106,33 @@ class Visualization():
             x_values.append(pt[0])
             y_values.append(pt[1])
 
-        self.arm_line.set_data(x_values, y_values)
+        # Arm Links
+        self.arm_links.set_data(x_values, y_values)
+
+        # Arm Joints
+        self.arm_joints.set_data(x_values[:-1], y_values[:-1])
+
+        # Gripper
+        gripper_x = []
+        gripper_y = []
+        tf = self.tftree.get_base_transform(self.tftree.num_joints)
+        for pt in self.gripper_pts:
+            transformed_point = np.dot(tf, pt)
+            transformed_x, transformed_y, _, _ = transformed_point.flatten()
+            gripper_x.append(transformed_x)
+            gripper_y.append(transformed_y)
+
+        self.gripper.set_data(gripper_x, gripper_y)
+
+        if self.arm_base is None:
+            self.arm_base = Rectangle(self.figure, self.ax, (-0.05,-0.1), (0.1, 0.01))
+            self.arm_base.set_color("black")
+            self.arm_base.build_shape()
+
+        if self.arm_stand is None:
+            self.arm_stand = Rectangle(self.figure, self.ax, (-0.025,-0.1), (0.05, 0.1))
+            self.arm_stand.set_color("grey")
+            self.arm_stand.build_shape()
 
     def visualize_cartesian_trajectory(self, cartesian_traj):
         x, y = self._format_path_data(cartesian_traj)
