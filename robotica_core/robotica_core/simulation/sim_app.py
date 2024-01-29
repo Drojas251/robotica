@@ -143,7 +143,10 @@ class SimGUI:
             self.sim_env.sim_core.vis_scene.clear_workspace()
 
     def _show_tftree(self):
-        pass
+        if self._show_tftree_check.get():
+            self.sim_env.sim_core.vis_scene.visualize_tftree()
+        else:
+            self.sim_env.sim_core.vis_scene.clear_tftree()
 
     def _show_planning(self):
         pass

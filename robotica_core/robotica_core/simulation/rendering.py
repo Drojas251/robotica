@@ -42,6 +42,53 @@ class Rectangle(Shape):
     def clear_shape(self):
         self.square.remove()
 
+class VisTF:
+    def __init__(self, ax):
+        self.ax = ax
+        self.x_axis, = ax.plot([], [], lw=1, color='red')
+        self.y_axis, = ax.plot([], [], lw=1, color='green')
+        self.axis_len = 0.075
+
+    def show_x_axis(self, tf):
+        pt = np.array([[self.axis_len], [0], [0], [1.0]])
+        transformed_point = np.dot(tf, pt)
+        transformed_x, transformed_y, _, _ = transformed_point.flatten()
+        self.x_axis.set_data([tf[0][3], transformed_x], [tf[1][3], transformed_y])
+
+    def show_y_axis(self, tf):
+        pt = np.array([[0], [self.axis_len], [0], [1.0]])
+        transformed_point = np.dot(tf, pt)
+        transformed_x, transformed_y, _, _ = transformed_point.flatten()
+        self.y_axis.set_data([tf[0][3], transformed_x], [tf[1][3], transformed_y])
+    
+    def show_tf(self, tf):
+        self.show_x_axis(tf)
+        self.show_y_axis(tf)
+
+    def clear_tf(self):
+        self.x_axis.set_data([], [])
+        self.y_axis.set_data([], [])
+
+class VisTFTree:
+    def __init__(self, tftree, ax):
+        self.tftree = tftree
+        self.ax = ax
+        self.num_frames = self.tftree.num_joints
+
+        self.vis_tfs = {}
+        for i in range(self.num_frames):
+            self.vis_tfs[i] = VisTF(self.ax)
+
+    def vis_tf_tree(self):
+        for i in range(self.num_frames):
+            tf = self.tftree.get_base_transform(i+1)
+            self.vis_tfs[i].show_tf(tf)
+
+    def clear_tf_tree(self):
+        for i in range(self.num_frames):
+            self.vis_tfs[i].clear_tf()
+
+
 class Visualization():
     def __init__(self, robot_model, tftree):
 
@@ -89,6 +136,9 @@ class Visualization():
         self.path_listener = RoboticaSubscriber(port=port, topic=topic)
         self.path_listener.subscribe(callback=self._path_listener_callback)
 
+        self.show_tftree = False
+        self.vis_tf_tree = VisTFTree(self.tftree, self.ax)
+
     def run(self):
         self.plt.show()
 
@@ -134,6 +184,11 @@ class Visualization():
             self.arm_stand.set_color("grey")
             self.arm_stand.build_shape()
 
+        if self.show_tftree:
+            self.vis_tf_tree.vis_tf_tree()
+        else:
+            self.vis_tf_tree.clear_tf_tree()
+            
     def visualize_cartesian_trajectory(self, cartesian_traj):
         x, y = self._format_path_data(cartesian_traj)
         self.trajectory.set_data(x, y)
@@ -143,6 +198,14 @@ class Visualization():
 
     def clear_workspace(self):
         self.ws.set_data([], [])
+
+    def visualize_tftree(self):
+        self.show_tftree = True
+        self.visualize_arm()
+
+    def clear_tftree(self):
+        self.show_tftree = False
+        self.visualize_arm()
 
     def add_rectangle_obj(self, name, origin, size):
         rectangle = Rectangle(self.figure, self.ax, origin, size)
