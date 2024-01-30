@@ -25,7 +25,7 @@ class SimCore:
         self.tftree.set_joints(joint_angles)
 
     def render(self):
-        self.vis_scene.visualize_arm()
+        self.vis_scene.visualize_robot()
 
     def reset_env(self, env_yml_file=None):
         self._clear_env_data()

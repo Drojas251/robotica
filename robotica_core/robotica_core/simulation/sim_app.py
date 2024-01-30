@@ -133,6 +133,10 @@ class SimGUI:
         self.planning_button = tk.Checkbutton(self.vis_frame, text="Show Planning", variable=self._show_planning_check, command=self._show_planning)
         self.planning_button.grid(row=1,column=0)
 
+        self._show_arm_check = tk.BooleanVar(value=True)
+        self.arm_button = tk.Checkbutton(self.vis_frame, text="Show Arm", variable=self._show_arm_check, command=self._show_arm)
+        self.arm_button.grid(row=1,column=1)
+
         self._init_plugins()
         self.sim_env.start_sim()
 
@@ -150,6 +154,12 @@ class SimGUI:
 
     def _show_planning(self):
         pass
+
+    def _show_arm(self):
+        if self._show_arm_check.get():
+            self.sim_env.sim_core.vis_scene.visualize_arm()
+        else:
+            self.sim_env.sim_core.vis_scene.clear_arm()
         
     def _reload_sim(self):
         self._read_plugin_data()

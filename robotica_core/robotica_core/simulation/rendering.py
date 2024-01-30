@@ -100,6 +100,7 @@ class Visualization():
         self.ax = ax
 
         # Arm Visual
+        self._show_arm = True
         self.arm_links, = ax.plot([], [], lw=5, color='grey')
         self.arm_joints, = ax.plot([], [], color='grey', marker='o', markersize=8, markerfacecolor='red', markeredgecolor='black')
         self.gripper, = ax.plot([], [], color='black', lw=4)
@@ -146,9 +147,9 @@ class Visualization():
         theta1 = self.DH_params.theta[0]
         theta2 = self.DH_params.theta[1]
         self.tftree.set_joints([theta1, theta2])
-        self.visualize_arm()
+        self.visualize_robot()
 
-    def visualize_arm(self):
+    def visualize_robot(self):
         tree = self.tftree.get_tree()
         x_values = []
         y_values = []
@@ -156,33 +157,53 @@ class Visualization():
             x_values.append(pt[0])
             y_values.append(pt[1])
 
-        # Arm Links
-        self.arm_links.set_data(x_values, y_values)
+        if self._show_arm:
+            # Arm Links
+            self.arm_links.set_data(x_values, y_values)
 
-        # Arm Joints
-        self.arm_joints.set_data(x_values[:-1], y_values[:-1])
+            # Arm Joints
+            self.arm_joints.set_data(x_values[:-1], y_values[:-1])
 
-        # Gripper
-        gripper_x = []
-        gripper_y = []
-        tf = self.tftree.get_base_transform(self.tftree.num_joints)
-        for pt in self.gripper_pts:
-            transformed_point = np.dot(tf, pt)
-            transformed_x, transformed_y, _, _ = transformed_point.flatten()
-            gripper_x.append(transformed_x)
-            gripper_y.append(transformed_y)
+            # Gripper
+            gripper_x = []
+            gripper_y = []
+            tf = self.tftree.get_base_transform(self.tftree.num_joints)
+            for pt in self.gripper_pts:
+                transformed_point = np.dot(tf, pt)
+                transformed_x, transformed_y, _, _ = transformed_point.flatten()
+                gripper_x.append(transformed_x)
+                gripper_y.append(transformed_y)
 
-        self.gripper.set_data(gripper_x, gripper_y)
+            self.gripper.set_data(gripper_x, gripper_y)
 
-        if self.arm_base is None:
-            self.arm_base = Rectangle(self.figure, self.ax, (-0.05,-0.1), (0.1, 0.01))
-            self.arm_base.set_color("black")
-            self.arm_base.build_shape()
+            if self.arm_base is None:
+                self.arm_base = Rectangle(self.figure, self.ax, (-0.05,-0.1), (0.1, 0.01))
+                self.arm_base.set_color("black")
+                self.arm_base.build_shape()
 
-        if self.arm_stand is None:
-            self.arm_stand = Rectangle(self.figure, self.ax, (-0.025,-0.1), (0.05, 0.1))
-            self.arm_stand.set_color("grey")
-            self.arm_stand.build_shape()
+            if self.arm_stand is None:
+                self.arm_stand = Rectangle(self.figure, self.ax, (-0.025,-0.1), (0.05, 0.1))
+                self.arm_stand.set_color("grey")
+                self.arm_stand.build_shape()
+        else:
+            # Clear Arm Links
+            self.arm_links.set_data([], [])
+
+            # Clear Arm Joints
+            self.arm_joints.set_data([], [])
+
+            # Clear Gripper
+            self.gripper.set_data([], [])
+
+            # Clear Arm Base
+            if self.arm_base is not None:
+                self.arm_base.clear_shape()
+                self.arm_base = None
+
+            # Clear Arm Stand
+            if self.arm_stand is not None:
+                self.arm_stand.clear_shape()
+                self.arm_stand = None
 
         if self.show_tftree:
             self.vis_tf_tree.vis_tf_tree()
@@ -201,11 +222,19 @@ class Visualization():
 
     def visualize_tftree(self):
         self.show_tftree = True
-        self.visualize_arm()
+        self.visualize_robot()
 
     def clear_tftree(self):
         self.show_tftree = False
-        self.visualize_arm()
+        self.visualize_robot()
+
+    def visualize_arm(self):
+        self._show_arm = True
+        self.visualize_robot()
+
+    def clear_arm(self):
+        self._show_arm = False
+        self.visualize_robot()
 
     def add_rectangle_obj(self, name, origin, size):
         rectangle = Rectangle(self.figure, self.ax, origin, size)
