@@ -2,10 +2,8 @@ from abc import abstractmethod
 from robotica_core.path_planning.path_planner_base import PathPlannerBase
 
 class PathPlannerPluginInterface(PathPlannerBase):
-    def __init__(self, collision_checker):
-        PathPlannerBase.__init__(self, collision_checker)
-        
-        self.collision_checker = collision_checker
+    def __init__(self, *args):
+        PathPlannerBase.__init__(self, *args)
 
     @abstractmethod
     def planner(self, start, goal):
@@ -21,5 +19,10 @@ class PathPlannerPluginInterface(PathPlannerBase):
 
         Return:
             path (List): [Waypoint]
+
+        if path cannot be found
+        
+        Return:
+            path: None
         """
         pass

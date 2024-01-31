@@ -7,10 +7,11 @@ from robotica_datatypes.path_datatypes.waypoint import WayPoint
 
 
 class RobotAPI(RoboticaCore):
-    def __init__(self, robot_yml_file):
+    def __init__(self, robot_yml_file, env_yml_file=None):
         RoboticaCore.__init__(
             self, 
             robot_yml_file, 
+            env_yml_file,
             kinematics_plugins = Kinematics_Plugins, 
             cartesian_traj_plugins = Trajectory_Planners_Plugins,
             path_planner_plugins = Path_Planners_Plugins,

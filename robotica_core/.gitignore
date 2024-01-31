@@ -8,3 +8,4 @@ robotica_core/trajectory_planning/__pycache__/
 robotica_core/simulation/__pycache__/
 robotica_core/utils/__pycache__/
 robotica_core/api/__pycache__/
+robotica_core/planning_scene/__pycache__/
