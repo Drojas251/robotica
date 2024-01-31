@@ -45,8 +45,8 @@ class Rectangle(Shape):
 class VisTF:
     def __init__(self, ax):
         self.ax = ax
-        self.x_axis, = ax.plot([], [], lw=1, color='red')
-        self.y_axis, = ax.plot([], [], lw=1, color='green')
+        self.x_axis, = ax.plot([], [], lw=2, color='red')
+        self.y_axis, = ax.plot([], [], lw=2, color='green')
         self.axis_len = 0.075
 
     def show_x_axis(self, tf):
@@ -73,19 +73,30 @@ class VisTFTree:
     def __init__(self, tftree, ax):
         self.tftree = tftree
         self.ax = ax
-        self.num_frames = self.tftree.num_joints
 
         self.vis_tfs = {}
-        for i in range(self.num_frames):
+        for i in range(self.tftree.num_frames):
             self.vis_tfs[i] = VisTF(self.ax)
 
+        self.arm_line, = ax.plot([], [], lw=1, color='grey', marker='o', markersize=3, markerfacecolor='black')
+
     def vis_tf_tree(self):
-        for i in range(self.num_frames):
-            tf = self.tftree.get_base_transform(i+1)
+        for i in range(self.tftree.num_frames):
+            tf = self.tftree.get_base_transform(i)
             self.vis_tfs[i].show_tf(tf)
 
+        tree = self.tftree.get_tree()
+        x_values = []
+        y_values = []
+        for pt in tree:
+            x_values.append(pt[0])
+            y_values.append(pt[1])
+        self.arm_line.set_data(x_values, y_values)
+
     def clear_tf_tree(self):
-        for i in range(self.num_frames):
+        self.arm_line.set_data([], [])
+
+        for i in range(self.tftree.num_frames):
             self.vis_tfs[i].clear_tf()
 
 
@@ -102,7 +113,7 @@ class Visualization():
         # Arm Visual
         self._show_arm = True
         self.arm_links, = ax.plot([], [], lw=5, color='grey')
-        self.arm_joints, = ax.plot([], [], color='grey', marker='o', markersize=8, markerfacecolor='red', markeredgecolor='black')
+        self.arm_joints, = ax.plot([], [], color='grey', marker='o', markersize=8, markerfacecolor='lightblue', markeredgecolor='black')
         self.gripper, = ax.plot([], [], color='black', lw=4)
         self.gripper_pts = [
             np.array([[0.02], [0.04], [0.0], [1.0]]),

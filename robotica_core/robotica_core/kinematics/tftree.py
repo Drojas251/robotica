@@ -6,16 +6,15 @@ class TFTree:
         self.DH_params = DH_params
         self.origin  = (0,0)
         self.num_joints = len(self.DH_params.theta)
+        self.num_frames = self.num_joints + 1
 
     def set_joints(self, thetas):
         self.DH_params.theta = thetas
 
     def get_tree(self):
         tree = []
-        tree.append(self.origin)
-
-        for i in range(self.num_joints):
-            A_i = self.get_base_transform(i+1)
+        for i in range(self.num_frames):
+            A_i = self.get_base_transform(i)
             tree.append(self._get_translation(A_i))
 
         return tree
