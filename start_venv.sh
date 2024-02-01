@@ -19,3 +19,7 @@ else
 
     fi
 fi
+
+cd ./robotica_core
+source ./setup_env.sh
+cd ../
