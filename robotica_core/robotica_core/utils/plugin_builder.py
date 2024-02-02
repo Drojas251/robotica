@@ -10,7 +10,7 @@ class Plugin:
     PLUGIN_DIR = "plugins"
     PLUGIN_DEF = "definition.py"
 
-    def __init__(self, robotica_plugin_dir, group_name):
+    def __init__(self, robotica_plugin_dir, group_name, interface_cls):
         """
         Args:
             robotica_plugin_dir (str): Directory name of specific plugin type
@@ -20,6 +20,7 @@ class Plugin:
 
         self.robotica_plugin_dir = robotica_plugin_dir
         self.group_name = group_name
+        self.interface_cls_name = interface_cls.__name__
 
         self.full_path = self.plugin_dir_path + "/" + robotica_plugin_dir + "/" + self.PLUGIN_DIR
         self.def_file_path = self.plugin_dir_path + "/" + robotica_plugin_dir + "/" + self.PLUGIN_DEF
@@ -70,7 +71,12 @@ class Plugin:
         with open(file_path, "r") as file:
             tree = ast.parse(file.read(), filename=file_path)
 
-        class_names = [node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
+        class_names = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                for base in node.bases:
+                    if base.id == self.interface_cls_name:
+                        class_names.append(node.name)
         return class_names        
     
 
