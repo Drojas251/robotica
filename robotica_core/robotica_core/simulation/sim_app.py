@@ -110,9 +110,13 @@ class SimGUI:
         self.set_plugins_button.grid(row=0,column=3)
         self.set_plugins_button.bind(lambda e:self._set_plugins)
 
-        self.reload_sim_button = Button(self.plugin_frame,text="Reload Sim",command=self._reload_sim,width=12)
+        self.reload_sim_button = Button(self.plugin_frame,text="Reload Env",command=self._reload_sim,width=12)
         self.reload_sim_button.grid(row=1,column=3)
         self.reload_sim_button.bind(lambda e:self._reload_sim)
+
+        self.reset_robot_button = Button(self.plugin_frame,text="Reset Robot",command=self._reset_robot,width=12)
+        self.reset_robot_button.grid(row=2,column=3)
+        self.reset_robot_button.bind(lambda e:self._reset_robot)
 
         # Vis control frame
         self.vis_frame = tk.Frame(self.vis_control_frame, borderwidth=2, relief="ridge")
@@ -166,6 +170,9 @@ class SimGUI:
         self._init_plugins()
 
         self.sim_env.sim_core.reset_env()
+
+    def _reset_robot(self):
+        self.sim_env.sim_core.reset_robot()
 
     def _read_plugin_data(self):
         shared_plugin_path = os.path.expanduser(self.PLUGIN_FILE_PATH)

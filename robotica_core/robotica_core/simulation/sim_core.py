@@ -13,6 +13,8 @@ class SimCore:
         self.tftree = TFTree(self.robot_model.DH_params)
         self.vis_scene = Visualization(self.robot_model, self.tftree)
         self.collision_checker = CollisionManager(self.tftree.get_link_tfs(), self.robot_model.DH_params.a)
+
+        self._init_joints = self.robot_model.DH_params.theta
         
         # Load Collision Checking Data
         self.collision_checker.add_collision_callback(self._collision_callback)
@@ -31,6 +33,10 @@ class SimCore:
         self._clear_env_data()
         self._reload_env_params()
         self._load_env_data()
+
+    def reset_robot(self):
+        self.update_tf_tree(self._init_joints)
+        self.render()
 
     def collisions_detected(self):
         link_tfs = self.tftree.get_link_tfs()
