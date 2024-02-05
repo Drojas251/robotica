@@ -138,6 +138,7 @@ class CollisionManager:
         self.collision_callback_func = func
 
     def _invoke_collision_callback(self, *args):
-        self.collision_callback_func(*args)
+        if self.collision_callback_func:
+            self.collision_callback_func(*args)
 
 

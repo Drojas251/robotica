@@ -1,3 +1,4 @@
+import numpy as np
 from robotica_core.simulation.physics import CollisionManager
 from robotica_core.utils.yml_parser import SceneParamsLoader
 from robotica_core.utils.yml_parser import RobotParamsLoader
