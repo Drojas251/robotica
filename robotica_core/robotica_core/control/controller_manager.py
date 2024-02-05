@@ -74,8 +74,15 @@ class ControllerManager():
             return None
 
     def publish_joints(self):
-        #print(self.curr_joints)
         self.joint_publisher.publish([self.curr_joints[0], self.curr_joints[1]])
+
+    def set_joint(self, joint_num, value):
+        self.curr_joints[joint_num - 1] = value
+        self.publish_joints()
+
+    def set_joints(self, joints):
+        self.curr_joints = joints
+        self.publish_joints()
 
     def collision_detected(self):
         self.current_trajectory.cartesian_traj = []

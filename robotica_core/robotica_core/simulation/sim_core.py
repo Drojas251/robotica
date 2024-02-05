@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 from robotica_core.simulation.physics import CollisionManager
 from robotica_core.simulation.rendering import Visualization
 from robotica_core.kinematics.tftree import TFTree
@@ -14,7 +15,7 @@ class SimCore:
         self.vis_scene = Visualization(self.robot_model, self.tftree)
         self.collision_checker = CollisionManager(self.tftree.get_link_tfs(), self.robot_model.DH_params.a)
 
-        self._init_joints = self.robot_model.DH_params.theta
+        self.init_joints = copy.copy(self.robot_model.DH_params.theta)
         
         # Load Collision Checking Data
         self.collision_checker.add_collision_callback(self._collision_callback)
@@ -23,8 +24,14 @@ class SimCore:
 
         self._env_yml_file = env_yml_file
 
+        self._executing_motion = False
+
     def update_tf_tree(self, joint_angles):
         self.tftree.set_joints(joint_angles)
+
+    def update_joints(self, joints):
+        self.update_tf_tree(joints)
+        self.render()
 
     def render(self):
         self.vis_scene.visualize_robot()
@@ -34,10 +41,6 @@ class SimCore:
         self._reload_env_params()
         self._load_env_data()
 
-    def reset_robot(self):
-        self.update_tf_tree(self._init_joints)
-        self.render()
-
     def collisions_detected(self):
         link_tfs = self.tftree.get_link_tfs()
         self.collision_checker.update_robot_tfs(link_tfs)
@@ -45,6 +48,12 @@ class SimCore:
 
     def _collision_callback(self, env_obj, robot_link):
         self.vis_scene.vis_collision(env_obj)
+
+    def executing(self, status):
+        self._executing_motion = status
+
+    def is_executing(self):
+        return self._executing_motion
 
     def _load_env_data(self):
         #Load Rectangle Objects

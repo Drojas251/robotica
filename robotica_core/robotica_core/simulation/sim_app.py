@@ -2,6 +2,7 @@ import numpy as np
 import sys
 import os
 import yaml
+import copy
 
 # Sim
 from robotica_core.simulation.sim_core import SimCore
@@ -41,16 +42,17 @@ class SimEnv:
         if not self.controller_manager.is_executing_path():
             traj = self.controller_manager.wait_for_joint_trajectory(10)
             if traj:
+                self.sim_core.executing(True)
                 self.sim_core.vis_scene.visualize_cartesian_trajectory(traj)
             else:
+                self.sim_core.executing(False)
                 return
 
         # Get next wpts to execute 
         theta1, theta2 = self.controller_manager.consume_wpt()
 
         # Simulate
-        self.sim_core.update_tf_tree([theta1, theta2])
-        self.sim_core.render()
+        self.sim_core.update_joints([theta1, theta2])
         collision = self.sim_core.collisions_detected()
         
         if collision:
@@ -92,6 +94,14 @@ class SimGUI:
         self.plugin_dict = {}
         self.plugin_menu = {}
         self._read_plugin_data()
+
+        # Joint Listener
+        networking_params = NetworkingParams() 
+        topic, port = networking_params.get_pub_sub_info("joint_publisher")
+        self.joint_listener = RoboticaSubscriber(port=port, topic=topic)
+        self.joint_listener.subscribe(callback=self._joint_listener_callback)
+
+        self._joint_sliders = []
                 
     def setup_ui_module(self):
         # Define sim frame        
@@ -141,6 +151,29 @@ class SimGUI:
         self.arm_button = tk.Checkbutton(self.vis_frame, text="Show Arm", variable=self._show_arm_check, command=self._show_arm)
         self.arm_button.grid(row=1,column=1)
 
+        # Control frame
+        self.control_frame = tk.Frame(self.vis_control_frame, borderwidth=2, relief="ridge")
+        self.control_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        self.control_frame.grid_columnconfigure(0, weight=1)
+        self.control_frame.grid_columnconfigure(1, weight=1)
+
+        # Create the first slider
+        self.slider1 = tk.Scale(self.control_frame, from_=-6.0, to=6.0, orient=tk.HORIZONTAL, length=300, digits = 3, resolution = 0.01, command=lambda value: self._on_slider_change(1, value))
+        self.slider1.grid(row=0, column=1, padx=10, pady=10)
+        self._joint_sliders.append(self.slider1)
+        self.joint_label1 = Label(self.control_frame, text="Joint 1", width=15)
+        self.joint_label1.grid(row=0, column=0)
+
+        # Create the second slider
+        self.slider2 = tk.Scale(self.control_frame, from_=-6.0, to=6.0, orient=tk.HORIZONTAL, length=300, digits = 3, resolution = 0.01,command=lambda value: self._on_slider_change(2, value))
+        self.slider2.grid(row=1, column=1, padx=10, pady=10)
+        self._joint_sliders.append(self.slider2)
+        self.joint_label2 = Label(self.control_frame, text="Joint 2", width=15)
+        self.joint_label2.grid(row=1, column=0)
+
+        for i, joint_value in enumerate(self.sim_env.controller_manager.curr_joints):
+            self._joint_sliders[i].set(joint_value)
+
         self._init_plugins()
         self.sim_env.start_sim()
 
@@ -172,7 +205,11 @@ class SimGUI:
         self.sim_env.sim_core.reset_env()
 
     def _reset_robot(self):
-        self.sim_env.sim_core.reset_robot()
+        init_joints = copy.copy(self.sim_env.sim_core.init_joints)
+        self.sim_env.controller_manager.set_joints(init_joints)
+        self.sim_env.sim_core.update_joints(self.sim_env.controller_manager.curr_joints)
+        for i, j in enumerate(init_joints):
+            self._joint_sliders[i].set(j)
 
     def _read_plugin_data(self):
         shared_plugin_path = os.path.expanduser(self.PLUGIN_FILE_PATH)
@@ -180,6 +217,16 @@ class SimGUI:
 
         with open(yaml_file_path, "r") as yaml_file:
             self.plugin_dict = yaml.safe_load(yaml_file)
+
+    def _on_slider_change(self, slider_id, value):
+        if not self.sim_env.sim_core.is_executing():      
+            self.sim_env.controller_manager.set_joint(slider_id, float(value))
+            self.sim_env.sim_core.update_joints(self.sim_env.controller_manager.curr_joints)
+
+    def _joint_listener_callback(self, data):
+        if self.sim_env.sim_core.is_executing():
+            for i, j in enumerate(data):
+                self._joint_sliders[i].set(j)
 
     def _init_plugins(self):
         row_inc = 0
@@ -242,7 +289,7 @@ class GuiLogging:
 
         # Bottom of the right frame is the logging frame
         self.logging_frame = tk.Frame(self.master, borderwidth=2, relief="ridge",width=100, height=20)
-        self.logging_frame.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        self.logging_frame.grid(row=2, column=0, columnspan=2, sticky="nsew")
         self.logging_frame.grid_rowconfigure(0, weight=1)
         self.logging_frame.grid_rowconfigure(1, weight=1)
 
@@ -287,6 +334,7 @@ class RoboticaApp:
         self.right_frame.pack(side="right", fill="both", expand=True)
         self.right_frame.grid_rowconfigure(0, weight=1)
         self.right_frame.grid_rowconfigure(1, weight=1)
+        self.right_frame.grid_rowconfigure(2, weight=1)
         self.gui_logging = GuiLogging(self.right_frame)
 
         # Sim Display and Interface Module
