@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from robotica_core.utils.yml_parser import RobotParamsLoader
 from robotica_core.utils.robotica_networking import RoboticaSubscriber
 from robotica_datatypes.kinematic_datatypes.DH_params import DH_parameters
@@ -43,11 +44,21 @@ class RobotModel(RobotModelBase):
 
         networking_params = NetworkingParams() 
 
+        self.thetas = None
+
         # Current Joint Angles
-        self.thetas = self.DH_params.theta
         topic, port = networking_params.get_pub_sub_info("joint_publisher")
         self.joint_listener = RoboticaSubscriber(port=port, topic=topic)
         self.joint_listener.subscribe(callback=self.joint_listener_callback)
+
+        # Wait for thetas to be published
+        for i in range(10):
+            if self.thetas is not None:
+                break
+            time.sleep(0.1)
+
+        else:
+            self.thetas = self.DH_params.theta
 
     def joint_listener_callback(self, data):
         self.thetas = data
