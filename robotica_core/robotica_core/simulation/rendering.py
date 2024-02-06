@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from robotica_core.utils.robotica_networking import RoboticaSubscriber
+from robotica_core.utils.robotica_networking import RoboticaSubscriber, RoboticaService
 from robotica_core.utils.yml_parser import NetworkingParams
-
+from robotica_core.path_planning.path_planner_base import PathVisManagerCmds
 
 class Shape:
     def __init__(self, fig, ax, origin): 
@@ -99,8 +99,44 @@ class VisTFTree:
         for i in range(self.tftree.num_frames):
             self.vis_tfs[i].clear_tf()
 
+class VisPathSegment:
+    def __init__(self, ax):
+        self.ax = ax
+        self.seg, = self.ax.plot([], [], lw=1, color='green', marker='o', markersize=5)
 
-class Visualization():
+    def set_data(self, x, y):
+        self.seg.set_data(x, y)
+
+    def clear_seg(self):
+        self.seg.set_data([], [])
+
+class VisSamplePlanning:
+    def __init__(self, ax):
+        self.ax = ax
+        self._segments = []
+
+    def clear_segments(self):
+        for seg in self._segments:
+            seg.clear_seg()
+
+        self._segments = []
+
+    def add_segment(self, x, y):
+        seg = VisPathSegment(self.ax)
+        seg.set_data(x, y)
+        self._segments.append(seg)
+
+    def _sample_planning_listener_callback(self, data):
+        x = []
+        y = []
+
+        for wpt in data:
+            x.append(wpt[0])
+            y.append(wpt[1])
+
+        self.add_segment(x, y)
+
+class Visualization:
     def __init__(self, robot_model, tftree):
 
         self.plt = plt
@@ -129,7 +165,7 @@ class Visualization():
         self.trajectory, = ax.plot([], [], lw=2)
 
         # Task Space Planned Path Visual
-        self.planned_path, = ax.plot([], [], lw=1, color='green', marker='o', markersize=8)
+        self.planned_path, = ax.plot([], [], lw=1, color='red', marker='o', markersize=8)
 
         # WS Visual
         self.ws, = self.plt.plot([], [],'o', c=[0,1,0,0.1], alpha=0.05)
@@ -148,8 +184,17 @@ class Visualization():
         self.path_listener = RoboticaSubscriber(port=port, topic=topic)
         self.path_listener.subscribe(callback=self._path_listener_callback)
 
+        # Sample Planning Listener
+        self.sample_planner_vis = VisSamplePlanning(self.ax)
+        topic, port = networking_params.get_pub_sub_info("sample_planning_publisher")
+        self.sample_planning_listener = RoboticaSubscriber(port=port, topic=topic)
+        self.sample_planning_listener.subscribe(callback=self.sample_planner_vis._sample_planning_listener_callback)
+
         self.show_tftree = False
         self.vis_tf_tree = VisTFTree(self.tftree, self.ax)
+
+        clear_path_serv_port = networking_params.get_serv_req_info("path_vis_service")
+        self.clear_path_serv = RoboticaService(port=clear_path_serv_port)
 
     def run(self):
         self.plt.show()
@@ -259,6 +304,16 @@ class Visualization():
     def vis_collision(self, obj_name):
         obj = self.collision_objs[obj_name]
         obj.collision()
+
+    def get_planning_vis_cmd(self, delay):
+        if self.clear_path_serv.received_request(delay):
+            cmd = self.clear_path_serv.unpack_request()
+
+            if cmd == PathVisManagerCmds.CLEAR:
+                self.sample_planner_vis.clear_segments()
+                self.clear_path_serv.send_response("true")
+            else:
+                self.clear_path_serv.send_response("false")
 
     def _format_path_data(self, cartesian_traj):
         x = [p.point[0] for p in cartesian_traj]

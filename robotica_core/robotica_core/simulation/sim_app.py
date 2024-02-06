@@ -40,6 +40,8 @@ class SimEnv:
 
     def _update(self, frame):
         if not self.controller_manager.is_executing_path():
+            self.sim_core.vis_scene.get_planning_vis_cmd(10)
+            
             traj = self.controller_manager.wait_for_joint_trajectory(10)
             if traj:
                 self.sim_core.executing(True)

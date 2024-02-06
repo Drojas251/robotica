@@ -1,6 +1,9 @@
-from robotica_core.utils.robotica_networking import RoboticaPublisher
+from enum import Enum
+from robotica_core.utils.robotica_networking import RoboticaPublisher, RoboticaClient
 from robotica_core.utils.yml_parser import NetworkingParams
 
+class PathVisManagerCmds(Enum):
+    CLEAR = "clear"
 
 class PathPlannerBase:
     def __init__(self, collision_checker, kinematics):
@@ -10,6 +13,12 @@ class PathPlannerBase:
         networking_params = NetworkingParams() 
         topic, port = networking_params.get_pub_sub_info("path_publisher")
         self.path_publisher = RoboticaPublisher(port=port, topic=topic)
+
+        topic, port = networking_params.get_pub_sub_info("sample_planning_publisher")
+        self.sample_planning_publisher = RoboticaPublisher(port=port, topic=topic)
+
+        path_vis_serv_port = networking_params.get_serv_req_info("path_vis_service")
+        self.path_vis_client = RoboticaClient(port=path_vis_serv_port)
 
     def planner(self, start, goal):
         """ Define Planner Here
@@ -46,6 +55,7 @@ class PathPlannerBase:
         return not collision
 
     def plan(self, start, goal):
+        self.path_vis_client.send_req(PathVisManagerCmds.CLEAR)
         path = self.planner(start, goal)
 
         if path is None:
@@ -53,5 +63,14 @@ class PathPlannerBase:
 
         self.path_publisher.publish(path)
         return path
+
+    def show_sample_segment(self, start, goal):
+        """ Publishes the path segment
+
+        Args:
+            start (tuple): (x, y)
+            goal (tuple): (x, y)
+        """
+        self.sample_planning_publisher.publish([start, goal])
 
     

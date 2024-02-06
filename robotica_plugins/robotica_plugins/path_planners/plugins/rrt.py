@@ -11,7 +11,7 @@ class treeNode():
         self.parent = None
 
 class RRTAlgorithm():
-    def __init__(self, start, goal, numIterations, stepSize, path_validate_func):
+    def __init__(self, start, goal, numIterations, stepSize, path_validate_func, vis_path_seg=None):
         self.randomTree = treeNode(start[0], start[1])
         self.start = start
         self.goal_pt = goal
@@ -24,6 +24,7 @@ class RRTAlgorithm():
         self.numWaypoints = 0
         self.Waypoints = []
         self.path_validate_func = path_validate_func
+        self.vis_path_seg = vis_path_seg
 
     def addChild(self, locationX, locationY):
         if (locationX == self.goal.locationX):
@@ -33,6 +34,11 @@ class RRTAlgorithm():
             tempNode = treeNode(locationX, locationY)
             self.nearestNode.children.append(tempNode)
             tempNode.parent = self.nearestNode
+
+        if self.vis_path_seg:
+            start = (locationX, locationY)
+            end = (self.nearestNode.locationX, self.nearestNode.locationY)
+            self.vis_path_seg(start, end)
         
     def sampleAPoint(self):
         x = random.uniform(-1, 1)
@@ -139,7 +145,7 @@ class RRT(PathPlannerPluginInterface):
         numIterations = 1200
         stepSize = 0.1
 
-        rrt = RRTAlgorithm(start_pt, goal_pt, numIterations, stepSize, self.validate_point)
+        rrt = RRTAlgorithm(start_pt, goal_pt, numIterations, stepSize, self.validate_point, self.show_sample_segment)
         plan = rrt.plan()
 
         if not plan:

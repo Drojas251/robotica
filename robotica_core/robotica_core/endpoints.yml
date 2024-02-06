@@ -5,8 +5,13 @@ pub_sub:
   path_publisher:
     topic: "planned_path"
     port: "5233"
+  sample_planning_publisher:
+    topic: "sample_planning"
+    port: "5033"
     
 service:
   move_service:
     port: "5555"
+  path_vis_service:
+    port: "5335"
   
