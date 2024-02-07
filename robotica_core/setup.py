@@ -17,6 +17,8 @@ setup(
     entry_points={
         'console_scripts': [
             'robotica_sim = robotica_core.simulation.sim_app:app',
+            'robotica_create_workspace = robotica_core.utils.robotica_create_workspace:create_robotica_ws',
+            'robotica_generate_plugin = robotica_core.utils.generate_plugin:generate_plugin',
         ],
     },
     author='Your Name',
