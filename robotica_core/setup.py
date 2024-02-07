@@ -17,6 +17,11 @@ setup(
         "python-fcl",
 
     ],
+    entry_points={
+        'console_scripts': [
+            'robotica_sim = robotica_core.simulation.sim_app:app',
+        ],
+    },
     author='Your Name',
     author_email='your.email@example.com',
     description='Description of your package',

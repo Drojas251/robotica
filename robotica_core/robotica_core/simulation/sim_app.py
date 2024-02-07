@@ -3,6 +3,7 @@ import sys
 import os
 import yaml
 import copy
+import argparse
 
 # Sim
 from robotica_core.simulation.sim_core import SimCore
@@ -350,23 +351,19 @@ class RoboticaApp:
         self.gui_logging.setup_ui_module()
         self.sim_gui.setup_ui_module()
 
+def app():
+    parser = argparse.ArgumentParser(description='Example script with arguments')
+    parser.add_argument('--robot_yml_path', required=True, help='String path to the robot yml file')
+    parser.add_argument('--env_yml_path', required=True, help='String path to env yml file')
+    args = parser.parse_args()
 
-if __name__ == "__main__":
-
-    if len(sys.argv) != 3:
-        print("Usage: python sim_env.py <robot_model_file_path> <env_file_path>")
-        sys.exit(1)  # Exit with an error code
-
-    # Get the yml_path from the command-line argument
-    robot_yml_path = sys.argv[1]
-    robot_model = RobotModelBase(robot_yml_path)
-
-    # File that describes the environment
-    env_yml_path = sys.argv[2]
-
+    robot_model = RobotModelBase(args.robot_yml_path)
     root = tk.Tk()
     root.geometry("1200x700")
-    app = RoboticaApp(robot_model, env_yml_path, root)
+    app = RoboticaApp(robot_model, args.env_yml_path, root)
     app.init_gui()
     tk.mainloop()
+
+if __name__ == "__main__":
+    app()
 
