@@ -10,7 +10,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            # Define any console scripts here
+            'build_plugins = robotica_plugins.build_plugins:build',
         ],
     },
     author='Your Name',
