@@ -11,9 +11,6 @@ setup(
         "pyyaml",
         "pyzmq",
         "PyQt5",
-        "notebook",
-        "ipykernel",
-        "ipython==8.12.0",
         "python-fcl",
 
     ],

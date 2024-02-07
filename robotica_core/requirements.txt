@@ -4,7 +4,4 @@ matplotlib==3.4.2
 pyyaml==6.0
 pyzmq
 pyqt5==5.14.1
-notebook
-ipykernel
-ipython==8.12.0
 python-fcl
