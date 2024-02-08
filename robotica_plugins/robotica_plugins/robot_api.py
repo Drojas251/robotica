@@ -2,14 +2,11 @@ from robotica_core.api.robotica_interface import RoboticaCore
 from robotica_plugins.kinematics.definition import Kinematics_Plugins
 from robotica_plugins.trajectory_planners.definition import Trajectory_Planners_Plugins
 from robotica_plugins.path_planners.definition import Path_Planners_Plugins
-from robotica_datatypes.trajectory_datatypes.trajectory import Trajectory, JointTrajectoryPoint, CartesianTrajectoryPoint
-from robotica_datatypes.path_datatypes.waypoint import WayPoint
 
 
-class RobotAPI(RoboticaCore):
+class RobotAPI:
     def __init__(self, robot_yml_file, env_yml_file=None):
-        RoboticaCore.__init__(
-            self, 
+        self._robot = RoboticaCore(
             robot_yml_file, 
             env_yml_file,
             kinematics_plugins = Kinematics_Plugins, 
@@ -22,45 +19,23 @@ class RobotAPI(RoboticaCore):
     #############################
     
     def joint_move(self, joint_trajectory):
-        cartesian_traj = []
-        joint_traj = []
-        for joint in joint_trajectory:
-            ee_point = self.kinematics.forward_kinematics(joint)
-            cartesian_traj_point = CartesianTrajectoryPoint((ee_point[0], ee_point[1]), 0.2)
-            cartesian_traj.append(cartesian_traj_point)
-
-            joint_traj_point = JointTrajectoryPoint(joint)
-            joint_traj.append(joint_traj_point)
-
-        trajectory = Trajectory(joint_traj, cartesian_traj)
-        self.controller.execute_move(trajectory)
+        self._robot.joint_move(joint_trajectory)
 
     def get_current_joint_positions(self):
-        return self.robot_model.get_current_pos()
+        return self._robot.get_current_joint_positions()
     
     def plan_and_execute(self, goal):
-        curr_joints = self.get_current_joint_positions()
-        curr_pos = self.kinematics.forward_kinematics(curr_joints)
-
-        path = self.path_planner.plan(curr_pos, goal)
-        self.execute_path(path)
-
+        self._robot.plan_and_execute(goal)
 
     def execute_path(self, path):
-        """ Move arm along a path 
-
-        Args: 
-            path[List]: A list of wpts
-        """
-        trajectory = self.cartesian_trajectory_planner.cartesian_trajectory(path)
-        self.controller.execute_move(trajectory)
+        self._robot.execute_path(path)
     
     ######################
     # Robot Core Interface
     ######################
     @property
     def robot_model(self):
-        return self._robot_model
+        return self._robot.robot_model
 
     @property
     def kinematics(self):
@@ -80,7 +55,7 @@ class RobotAPI(RoboticaCore):
                 return:
                     joints (list): Joint angles
         """
-        return self._kinematics
+        return self._robot.kinematics
 
     @property
     def cartesian_trajectory_planner(self):
@@ -93,7 +68,7 @@ class RobotAPI(RoboticaCore):
                 return: 
                     trajectory (Trajectory)
         """
-        return self._cartesian_trajectory_planner
+        return self._robot.cartesian_trajectory_planner
 
     @property
     def controller(self):
@@ -104,7 +79,7 @@ class RobotAPI(RoboticaCore):
                 args: 
                     trajectory (Trajectory)
         """
-        return self._controller
+        return self._robot.controller
 
     @property
     def path_planner(self):
@@ -116,6 +91,6 @@ class RobotAPI(RoboticaCore):
                     start (tuple)
                     goal (tuple)
         """
-        return self._path_planner
+        return self._robot.path_planner
 
 
