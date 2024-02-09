@@ -161,6 +161,147 @@ env_path = "/home/drojas/robot_arm/test_ws/environments/example_env.yml"
 robot = RobotInterface(yml_path, env_yml_file=env_path)
 '''
 
+def gen_test_kinematics_plugin():
+    return f'''
+import numpy as np
+from robotica_plugins.kinematics.kinematics_plugin_interface import KinematicPluginInterface
+
+class ExampleKinematicsPlugin(KinematicPluginInterface):
+    def __init__(self, robot_model):
+        KinematicPluginInterface.__init__(self, robot_model)
+        
+    def compute_forward_kinematics(self):
+        """
+        Description:
+            Forward kinematics refers to the use of the kinematic equations of a robot to compute 
+            the position of the end-effector from specified values for the joint parameters.
+            Joint Angles (Theta_1, Theta_2) <-> Position of End-Effector (x, y)
+                    
+        Return:
+            ee_point [Float Array]: End effector Pose in X,Y 
+
+        Examples:
+            self.compute_forward_kinematics([0.0, 1.57])
+        """
+
+        ee_point = np.zeros(2)
+        ee_point[0] = round(self.DH_params.a[0]*np.cos(self.DH_params.theta[0]) + self.DH_params.a[1]*np.cos(self.DH_params.theta[0] + self.DH_params.theta[1]), 10)
+        ee_point[1] = round(self.DH_params.a[0]*np.sin(self.DH_params.theta[0]) + self.DH_params.a[1]*np.sin(self.DH_params.theta[0] + self.DH_params.theta[1]), 10)
+
+        return ee_point
+    
+    def compute_inverse_kinematics(self, point, cfg):
+        theta_aux     = np.zeros(2)
+
+        # Cosine Theorem [Beta]: eq (1)
+        cosT_beta_numerator   = ((self.DH_params.a[0]**2) + (point[0]**2 + point[1]**2) - (self.DH_params.a[1]**2))
+        cosT_beta_denumerator = (2*self.DH_params.a[0]*np.sqrt(point[0]**2 + point[1]**2))
+        
+        # Calculation angle of Theta 1,2 (Inverse trigonometric functions):
+        # Rule 1: The range of the argument “x” for arccos function is limited from -1 to 1.
+        # −1 ≤ x ≤ 1
+        # Rule 2: Output of arccos is limited from 0 to π (radian).
+        # 0 ≤ y ≤ π
+
+        # Calculation angle of Theta 1
+        if cosT_beta_numerator/cosT_beta_denumerator > 1:
+            theta_aux[0] = np.arctan2(point[1], point[0]) 
+            print('[INFO] Theta 1 Error: ', point[0], point[1])
+        elif cosT_beta_numerator/cosT_beta_denumerator < -1:
+            theta_aux[0] = np.arctan2(point[1], point[0]) - np.pi 
+            print('[INFO] Theta 1 Error: ', point[0], point[1]) 
+        else:
+            if cfg == 0:
+                theta_aux[0] = np.arctan2(point[1], point[0]) - np.arccos(cosT_beta_numerator/cosT_beta_denumerator)
+            elif cfg == 1:
+                theta_aux[0] = np.arctan2(point[1], point[0]) + np.arccos(cosT_beta_numerator/cosT_beta_denumerator)
+                
+        # Cosine Theorem [Alha]: eq (2)
+        cosT_alpha_numerator   = (self.DH_params.a[0]**2) + (self.DH_params.a[1]**2) - (point[0]**2 + point[1]**2)
+        cosT_alpha_denumerator = (2*(self.DH_params.a[0]*self.DH_params.a[1]))
+
+        # Calculation angle of Theta 2
+        if cosT_alpha_numerator/cosT_alpha_denumerator > 1:
+            theta_aux[1] = np.pi
+            print('[INFO] Theta 2 Error: ', point[0], point[1])
+        elif cosT_alpha_numerator/cosT_alpha_denumerator < -1:
+            theta_aux[1] = 0.0
+            print('[INFO] Theta 2 Error: ', point[0], point[1])
+        else:
+            if cfg == 0:
+                theta_aux[1] = np.pi - np.arccos(cosT_alpha_numerator/cosT_alpha_denumerator)
+            elif cfg == 1:
+                theta_aux[1] = np.arccos(cosT_alpha_numerator/cosT_alpha_denumerator) - np.pi
+
+        return theta_aux
+
+
+    def compute_differential_kinematics(self, p_target, theta, accuracy, num_of_iter):
+        pass
+'''
+
+def gen_test_path_planner_plugin():
+    return f'''
+from robotica_plugins.path_planners.path_planning_plugin_interface import PathPlannerPluginInterface
+from robotica_datatypes.path_datatypes.waypoint import WayPoint
+
+class ExamplePathPlannerPlugin(PathPlannerPluginInterface):
+    def __init__(self, *args):
+        PathPlannerPluginInterface.__init__(self, *args)
+
+    def planner(self, start, goal):
+        if not self.validate_point(goal):
+            print("Not a valid goal point")
+            return None
+
+        return [WayPoint(start, 0.3), WayPoint(goal, 0.3)]
+'''
+
+def gen_test_trajectory_planner_plugin():
+    return f'''
+import numpy as np
+from robotica_plugins.trajectory_planners.trajectory_planning_interface import CartesianTrajectoryPluginInterface
+
+class ExampleTrajPlannerPlugin(CartesianTrajectoryPluginInterface):
+    def __init__(self, kinematics):
+        CartesianTrajectoryPluginInterface.__init__(self, kinematics)
+    
+    def cartesian_trajectory_generator(self, wpts):
+        """ Cartesian Trajectory Generator
+        
+        Args:
+            wpts ([WayPoint]): List of WayPoint objects
+
+        Returns:
+            x[List]: ee x points 
+            y[List]: ee y points 
+            speeds[List]: speeds at each point 
+        """
+        num_steps = 15
+        x_pts = []
+        y_pts = []
+        speeds = []
+
+        for i in range(len(wpts) - 1):
+            start_pt = wpts[i].point
+            target_pt = wpts[i+1].point
+
+            time = np.linspace(0.0, 1.0, num_steps)
+
+            # Linear Bezier Curve
+            # p(t) = (1 - t)*p_[0] + t*p_[1], t ∈ [0, 1]
+            x = (1 - time) * start_pt[0] + time * target_pt[0]
+            y = (1 - time) * start_pt[1] + time * target_pt[1]
+
+            speed = [wpts[i+1].speed] * len(time)
+
+            x_pts.extend(x)
+            y_pts.extend(y)
+            speeds.extend(speed)
+
+        return x_pts, y_pts, speeds
+'''
+
 def create_ws(ws_dict, root_path):
     os.makedirs(root_path)
     files = ws_dict['files']
@@ -193,6 +334,7 @@ def create_robotica_ws():
                                 'dirs':{},
                                 'files':{
                                     '__init__.py': '',
+                                    'example_kinematics_plugin.py': gen_test_kinematics_plugin(),
                                 }
                             },
                         },
@@ -207,6 +349,7 @@ def create_robotica_ws():
                                 'dirs':{},
                                 'files':{
                                     '__init__.py': '',
+                                    'example_path_planner_plugin.py': gen_test_path_planner_plugin(),
                                 }
                             },
                         },
@@ -221,6 +364,7 @@ def create_robotica_ws():
                                 'dirs':{},
                                 'files':{
                                     '__init__.py': '',
+                                    'example_traj_planner_plugin.py': gen_test_trajectory_planner_plugin(),
                                 }
                             },
                         },
