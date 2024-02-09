@@ -148,6 +148,19 @@ objects:
       y: 0.15
 '''
 
+def gen_applcation_script():
+    return f'''
+from scripts.robot_interface import RobotInterface
+
+# Example robot and environment configuration files.
+# Modify these files or create new ones for your application.
+# The path to these files are required to initialize the RobotInterface.
+robot_path = "/home/drojas/robot_arm/test_ws/robots/example_robot.yml"
+env_path = "/home/drojas/robot_arm/test_ws/environments/example_env.yml"
+
+robot = RobotInterface(yml_path, env_yml_file=env_path)
+'''
+
 def create_ws(ws_dict, root_path):
     os.makedirs(root_path)
     files = ws_dict['files']
@@ -240,6 +253,7 @@ def create_robotica_ws():
                 'files':{
                     '__init__.py': '',
                     'robot_interface.py': robot_interface_file(),
+                    'robot_application.py': gen_applcation_script(),
                 }
             },
         },
