@@ -102,6 +102,52 @@ class RobotInterface:
         return self.api.path_planner.plan(start, goal)
 '''
 
+def gen_example_robot_yml():
+    return f'''
+robot_name: "example_2_link_robot"
+dh_params:
+  theta: [1.3,-0.9]
+  a: [0.3, 0.25]
+  d: [0.0, 0.0]
+  alpha: [0.0, 0.0]
+joint_limits:
+  j1:
+    position:
+      min: -2.44
+      max: 2.44
+    velocity:
+      min: 1
+      max: 2
+  j2:
+    position:
+      min: -2.5
+      max: 2.5
+    velocity:
+      min: 1
+      max: 3
+'''
+
+def gen_example_env_yml():
+    return f'''
+objects:
+  obj_1:
+    type: "rectangle"
+    pose:
+      x: -0.5
+      y: 0.5
+    size:
+      x: 0.15
+      y: 0.15
+  obj_2:
+    type: "rectangle"
+    pose:
+      x: 0.5
+      y: 0.5
+    size:
+      x: 0.15
+      y: 0.15
+'''
+
 def create_ws(ws_dict, root_path):
     os.makedirs(root_path)
     files = ws_dict['files']
@@ -179,12 +225,14 @@ def create_robotica_ws():
                 'dirs':{},
                 'files':{
                     '__init__.py': '',
+                    'example_robot.yml': gen_example_robot_yml(),
                 }
             },
             'environments':{
                 'dirs':{},
                 'files':{
                     '__init__.py': '',
+                    'example_env.yml': gen_example_env_yml(),
                 }
             },
             'scripts':{
