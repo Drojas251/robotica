@@ -60,10 +60,10 @@ from plugins.trajectory_planners.definition import Trajectory_Planners_Plugins
 from plugins.path_planners.definition import Path_Planners_Plugins
 
 class RobotInterface:
-    def __init__(self, robot_yml_file, env_yml_file=None):
+    def __init__(self, robot_yml_file, world_yml_file=None):
         self.api = RobotAPI(
             robot_yml_file, 
-            env_yml_file,
+            world_yml_file,
             kinematics_plugins = Kinematics_Plugins, 
             cartesian_traj_plugins = Trajectory_Planners_Plugins,
             path_planner_plugins = Path_Planners_Plugins,
@@ -127,7 +127,7 @@ joint_limits:
       max: 3
 '''
 
-def gen_example_env_yml():
+def gen_example_world_yml():
     return f'''
 objects:
   obj_1:
@@ -152,13 +152,13 @@ def gen_applcation_script():
     return f'''
 from scripts.robot_interface import RobotInterface
 
-# Example robot and environment configuration files.
+# Example robot and world configuration files.
 # Modify these files or create new ones for your application.
 # The path to these files are required to initialize the RobotInterface.
-robot_path = "/home/drojas/robot_arm/test_ws/robots/example_robot.yml"
-env_path = "/home/drojas/robot_arm/test_ws/environments/example_env.yml"
+robot_path = "/home/drojas/robot_arm/test_ws/configs/robots/example_robot.yml"
+world_path = "/home/drojas/robot_arm/test_ws/configs/worlds/example_world.yml"
 
-robot = RobotInterface(yml_path, env_yml_file=env_path)
+robot = RobotInterface(robot_path, env_yml_file=world_path)
 '''
 
 def gen_test_kinematics_plugin():
@@ -378,18 +378,27 @@ def create_robotica_ws():
                     '__init__.py': '',
                 }
             },
-            'robots':{
-                'dirs':{},
+            'configs':{
+                'dirs':{
+                    'robots':{
+                        'dirs':{},
+                        'files':{
+                            'example_robot.yml': gen_example_robot_yml(),
+                        }
+                    },
+                    'worlds':{
+                        'dirs':{},
+                        'files':{
+                            'example_world.yml': gen_example_world_yml(),
+                        }
+                    },
+                    'launch':{
+                        'dirs':{},
+                        'files':{}
+                    },
+                },
                 'files':{
                     '__init__.py': '',
-                    'example_robot.yml': gen_example_robot_yml(),
-                }
-            },
-            'environments':{
-                'dirs':{},
-                'files':{
-                    '__init__.py': '',
-                    'example_env.yml': gen_example_env_yml(),
                 }
             },
             'scripts':{
