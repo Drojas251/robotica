@@ -150,13 +150,14 @@ objects:
 
 def gen_applcation_script():
     return f'''
+import os
 from scripts.robot_interface import RobotInterface
 
 # Example robot and world configuration files.
 # Modify these files or create new ones for your application.
 # The path to these files are required to initialize the RobotInterface.
-robot_path = "/home/drojas/robot_arm/test_ws/configs/robots/example_robot.yml"
-world_path = "/home/drojas/robot_arm/test_ws/configs/worlds/example_world.yml"
+robot_path = os.path.join("..", "configs/robots", "example_robot.yml")
+world_path = os.path.join("..", "configs/worlds", "example_world.yml")
 
 robot = RobotInterface(robot_path, env_yml_file=world_path)
 '''
