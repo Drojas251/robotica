@@ -414,6 +414,7 @@ def create_robotica_ws():
     ws_path = os.path.join(curr_path, ws_name)
     os.chdir(ws_path)
     subprocess.run(['pip', 'install', '-e', '.'])
+    subprocess.run(['python', 'build_plugins.py'])
 
 
 if __name__ == "__main__":
