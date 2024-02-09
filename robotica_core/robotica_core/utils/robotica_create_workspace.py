@@ -52,6 +52,56 @@ def init_definition_file(plugin_type):
 {plugin_type} = {{}}
 '''
 
+def robot_interface_file():
+    return f'''
+from robotica_plugins.utils.robot_api import RobotAPI
+from plugins.kinematics.definition import Kinematics_Plugins
+from plugins.trajectory_planners.definition import Trajectory_Planners_Plugins
+from plugins.path_planners.definition import Path_Planners_Plugins
+
+class RobotInterface:
+    def __init__(self, robot_yml_file, env_yml_file=None):
+        self.api = RobotAPI(
+            robot_yml_file, 
+            env_yml_file,
+            kinematics_plugins = Kinematics_Plugins, 
+            cartesian_traj_plugins = Trajectory_Planners_Plugins,
+            path_planner_plugins = Path_Planners_Plugins,
+        )
+
+    #############################
+    # Robot Application Interface
+    #############################
+        
+    def plan_and_execute(self, goal):
+        self.api.plan_and_execute(goal)
+
+    def execute_path(self, path):
+        self.api.execute_path(path)
+    
+    def joint_move(self, joint_trajectory):
+        self.api.joint_move(joint_trajectory)
+    
+    def get_curr_joint_pos(self):
+        return self.api.get_current_joint_positions()
+    
+    def get_curr_ee_pos(self):
+        pass
+    
+    ######################
+    # Robot Core Interface
+    ######################
+        
+    def inverse_kinematics(self, point, cfg=0):
+        return self.api.kinematics.inverse_kinematics(point, cfg)
+    
+    def forward_kinematics(self, joints):
+        return self.api.kinematics.forward_kinematics(joints)
+    
+    def plan(self, start, goal):
+        return self.api.path_planner.plan(start, goal)
+'''
+
 def create_ws(ws_dict, root_path):
     os.makedirs(root_path)
     files = ws_dict['files']
@@ -141,6 +191,7 @@ def create_robotica_ws():
                 'dirs':{},
                 'files':{
                     '__init__.py': '',
+                    'robot_interface.py': robot_interface_file(),
                 }
             },
         },
