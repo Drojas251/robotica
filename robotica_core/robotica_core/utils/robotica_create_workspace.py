@@ -159,7 +159,11 @@ from scripts.robot_interface import RobotInterface
 robot_path = os.path.join("..", "configs/robots", "example_robot.yml")
 world_path = os.path.join("..", "configs/worlds", "example_world.yml")
 
-robot = RobotInterface(robot_path, env_yml_file=world_path)
+robot = RobotInterface(robot_path, world_yml_file=world_path)
+
+robot.plan_and_execute((0.05, 0.54))
+robot.plan_and_execute((0.1, 0.24))
+robot.plan_and_execute((0.25, 0.5))
 '''
 
 def gen_test_kinematics_plugin():
