@@ -1,6 +1,7 @@
 import os
 import argparse
 import subprocess
+from robotica_core.utils.workspace_manager import add_workspace
 
 def generate_setup_file(ws_name):
     return f'''
@@ -423,9 +424,12 @@ def create_robotica_ws():
             'build_plugins.py': build_plugins_script(),
         }
     }
+
+    # Create workspace and setup the environment
     create_ws(ws, ws_name)
     curr_path = os.getcwd()
     ws_path = os.path.join(curr_path, ws_name)
+    add_workspace(ws_path)
     os.chdir(ws_path)
     subprocess.run(['pip', 'install', '-e', '.'])
     subprocess.run(['python', 'build_plugins.py'])
