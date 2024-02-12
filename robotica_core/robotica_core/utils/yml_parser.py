@@ -8,6 +8,10 @@ class ParseYML:
         with open(self.yml_path, 'r') as file:
             data = yaml.safe_load(file)
         return data
+    
+    def _write_yml_file(self, data):
+        with open(self.yml_path, 'w') as file:
+            yaml.dump(data, file)
 
 class RobotParamsLoader(ParseYML):
     def __init__(self, params_yml_path):
