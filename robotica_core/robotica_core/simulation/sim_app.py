@@ -354,6 +354,7 @@ class RoboticaApp:
         self.sim_gui.setup_ui_module()
 
 def app():
+    #TODO: Setup script to run eval "$(register-python-argcomplete robotica_sim)"
     robotica_launch = RoboticaLaunch()
     robot_file, world_file = robotica_launch.get_launch_file()
 

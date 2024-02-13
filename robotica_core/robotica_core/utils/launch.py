@@ -7,6 +7,8 @@ import argcomplete
 
 from robotica_core.utils.workspace_manager import find_workspaces
 
+#TODO: Setup script to run eval "$(register-python-argcomplete launch.py)"
+
 class RoboticaLaunch:
     def __init__(self):
         self.ws_name_list, self.ws_dict = self.map_workspace()
