@@ -149,6 +149,14 @@ objects:
       y: 0.15
 '''
 
+def gen_example_launch_yml():
+    return '''
+{
+    "robot": "example_robot.yml",
+    "world": "example_world.yml"
+}
+'''
+
 def gen_applcation_script():
     return f'''
 import os
@@ -400,7 +408,9 @@ def create_robotica_ws():
                     },
                     'launch':{
                         'dirs':{},
-                        'files':{}
+                        'files':{
+                            'example.json': gen_example_launch_yml(),
+                        }
                     },
                 },
                 'files':{
