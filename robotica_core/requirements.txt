@@ -5,3 +5,4 @@ pyyaml==6.0
 pyzmq
 pyqt5==5.14.1
 python-fcl
+argcomplete

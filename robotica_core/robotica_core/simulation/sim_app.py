@@ -1,9 +1,10 @@
+# PYTHON_ARGCOMPLETE_OK
+
 import numpy as np
 import sys
 import os
 import yaml
 import copy
-import argparse
 
 # Sim
 from robotica_core.simulation.sim_core import SimCore
@@ -15,6 +16,7 @@ from robotica_core.control.controller_manager import ControllerManager
 from robotica_datatypes.kinematic_datatypes.DH_params import DH_parameters    
 from robotica_core.kinematics.robot_model import RobotModelBase
 from matplotlib.animation import FuncAnimation
+from robotica_core.utils.launch import RoboticaLaunch
 
 # App
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -352,15 +354,13 @@ class RoboticaApp:
         self.sim_gui.setup_ui_module()
 
 def app():
-    parser = argparse.ArgumentParser(description='Example script with arguments')
-    parser.add_argument('--robot_yml_path', required=True, help='String path to the robot yml file')
-    parser.add_argument('--env_yml_path', required=True, help='String path to env yml file')
-    args = parser.parse_args()
+    robotica_launch = RoboticaLaunch()
+    robot_file, world_file = robotica_launch.get_launch_file()
 
-    robot_model = RobotModelBase(args.robot_yml_path)
+    robot_model = RobotModelBase(robot_file)
     root = tk.Tk()
     root.geometry("1200x700")
-    app = RoboticaApp(robot_model, args.env_yml_path, root)
+    app = RoboticaApp(robot_model, world_file, root)
     app.init_gui()
     tk.mainloop()
 

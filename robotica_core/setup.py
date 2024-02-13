@@ -6,6 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "robotica_datatypes",
+        "argcomplete",
         "numpy",
         "matplotlib",
         "pyyaml",
