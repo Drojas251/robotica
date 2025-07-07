@@ -1,4 +1,5 @@
 import yaml
+import os
 
 class ParseYML:
     def __init__(self, yml_path):
@@ -45,7 +46,8 @@ class RobotParamsLoader(ParseYML):
 
 class NetworkingParams(ParseYML):
     def __init__(self):
-        yml_path = "/home/drojas/robot_arm/robotica/robotica_core/robotica_core/endpoints.yml"
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        yml_path = os.path.join(current_dir, "endpoints.yml")
         super().__init__(yml_path)
 
     def get_pub_sub_info(self, topic_name):
