@@ -1,2 +1,13 @@
 venv/
+
 .ipynb_checkpoints/
+
+# Ignore tar.gz distribution archives
+*.tar.gz
+
+# Ignore egg-info metadata files
+*.egg-info/
+
+build
+
+dist
