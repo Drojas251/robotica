@@ -11,7 +11,7 @@ else
         echo "venv activated!"
     else
         echo "Creating venv $venv_dir"
-        python3 -m venv venv
+        python3.8 -m venv venv
         echo "venv created!"
 
         source venv/bin/activate
