@@ -8,20 +8,29 @@ class WorkSpacesManager(ParseYML):
         super().__init__(active_ws_file)
 
     def get_active_ws(self):
-        data = self._read_yml_file()
+        data = self._read_ws_data()
         return data["workspaces"]
     
     def add_ws(self, ws_path):
-        data = self._read_yml_file()
+        data = self._read_ws_data()
         if ws_path not in data["workspaces"]:
             data["workspaces"].append(ws_path)
             self._write_yml_file(data)
     
     def remove_ws(self, ws_name):
-        data = self._read_yml_file()
+        data = self._read_ws_data()
         if ws_name in data["workspaces"]:
             data["workspaces"].remove(ws_name)
             self._write_yml_file(data)
+
+    def _read_ws_data(self):
+        data = self._read_yml_file()
+
+        if "workspaces" not in data or not isinstance(data["workspaces"], list):
+            data["workspaces"] = []
+            self._write_yml_file(data)
+        
+        return data
 
 ############################
 #Funcitons available to use:
